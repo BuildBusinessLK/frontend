@@ -8,6 +8,8 @@ import HomePage from './pages/HomePage';
 import SubscriptionsPage from './pages/SubscriptionsPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import AIChatPage from './pages/AIChatPage';
+import MarketingPage from './pages/MarketingPage';
 
 export default function App() {
   return (
@@ -21,6 +23,8 @@ export default function App() {
               <Route path="/subscriptions" element={<SubscriptionsPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/ai-chat" element={<AIChatPage />} />
+              <Route path="/marketing" element={<MarketingPage />} />
             </Routes>
           </MainLayout>
         </Router>
