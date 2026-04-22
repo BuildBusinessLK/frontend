@@ -87,7 +87,7 @@ export default function MarketingPage() {
                 mb: 1,
               }}
             >
-              Choose a marketing 
+              Choose a marketing channel
             </Typography>
             <Typography sx={{ maxWidth: 720, color: theme.palette.text.secondary }}>
               Click a card to explore a focused starting point for your website, social media, or email marketing.
