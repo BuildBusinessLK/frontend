@@ -41,6 +41,8 @@ export default function WebsiteSetupPage() {
   });
 
   const [completed, setCompleted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -61,16 +63,48 @@ export default function WebsiteSetupPage() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Save form data (could be to localStorage or API)
-    localStorage.setItem('websiteSetup', JSON.stringify(formData));
-    setCompleted(true);
-    
-    // Redirect after 2 seconds
-    setTimeout(() => {
-      navigate('/ai-chat');
-    }, 2000);
+    setLoading(true);
+    setError('');
+
+    try {
+      // Save to localStorage (backup)
+      localStorage.setItem('websiteSetup', JSON.stringify(formData));
+
+      // Send to PHP backend
+      const response = await fetch('http://localhost/campus/project/frontend/save-website-setup.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setCompleted(true);
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          navigate('/ai-chat');
+        }, 2000);
+      } else {
+        setError(result.message || 'Failed to save website setup');
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error connecting to server. Data saved locally.');
+      setLoading(false);
+      // Still show success after 2 seconds even if backend failed
+      setTimeout(() => {
+        setCompleted(true);
+        setTimeout(() => {
+          navigate('/ai-chat');
+        }, 2000);
+      }, 1500);
+    }
   };
 
   const progress = Math.round(
@@ -213,6 +247,22 @@ export default function WebsiteSetupPage() {
 
               <form onSubmit={handleSubmit}>
                 <Stack spacing={3}>
+                  {/* Error Message */}
+                  {error && (
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        background: mode === 'dark' ? 'rgba(239,68,68,0.1)' : 'rgba(239,68,68,0.05)',
+                        border: '1px solid rgba(239,68,68,0.3)',
+                      }}
+                    >
+                      <Typography sx={{ color: '#EF4444', fontSize: '0.9rem' }}>
+                        {error}
+                      </Typography>
+                    </Box>
+                  )}
+
                   {/* Business Information */}
                   <Box>
                     <Typography
@@ -436,6 +486,7 @@ export default function WebsiteSetupPage() {
                       fullWidth
                       variant="outlined"
                       onClick={() => navigate('/marketing/website')}
+                      disabled={loading}
                       sx={{
                         borderRadius: 999,
                         py: 1.5,
@@ -447,6 +498,7 @@ export default function WebsiteSetupPage() {
                       fullWidth
                       variant="contained"
                       type="submit"
+                      disabled={loading}
                       sx={{
                         borderRadius: 999,
                         py: 1.5,
@@ -455,9 +507,13 @@ export default function WebsiteSetupPage() {
                         '&:hover': {
                           background: 'linear-gradient(135deg, #16A34A, #15803D)',
                         },
+                        '&:disabled': {
+                          opacity: 0.6,
+                          cursor: 'not-allowed',
+                        },
                       }}
                     >
-                      Create Website
+                      {loading ? 'Saving...' : 'Create Website'}
                     </Button>
                   </Stack>
                 </Stack>
