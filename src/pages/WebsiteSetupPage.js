@@ -232,7 +232,7 @@ export default function WebsiteSetupPage() {
                         name="businessName"
                         value={formData.businessName}
                         onChange={handleInputChange}
-                        placeholder="Enter your brand name"
+                        placeholder="Enter your business name"
                         required
                         sx={{
                           '& .MuiOutlinedInput-root': {
@@ -292,7 +292,7 @@ export default function WebsiteSetupPage() {
                         name="targetAudience"
                         value={formData.targetAudience}
                         onChange={handleInputChange}
-                        placeholder="e.g., Small business owners, Startups, Enterprise companies"
+                        placeholder="e.g., food and cosmetic manufacturers, retail consumers,international buyers"
                         required
                         sx={{
                           '& .MuiOutlinedInput-root': {
@@ -349,7 +349,7 @@ export default function WebsiteSetupPage() {
                               onChange={handleFeatureChange}
                             />
                           }
-                          label="Product/Service Showcase"
+                          label="Product catalog (palm oil, related products)"
                         />
                         <FormControlLabel
                           control={
@@ -359,7 +359,7 @@ export default function WebsiteSetupPage() {
                               onChange={handleFeatureChange}
                             />
                           }
-                          label="Blog Section"
+                          label="About Us section"
                         />
                         <FormControlLabel
                           control={
@@ -369,7 +369,7 @@ export default function WebsiteSetupPage() {
                               onChange={handleFeatureChange}
                             />
                           }
-                          label="E-commerce/Shopping"
+                          label="E-commerce/Shopping/online ordering"
                         />
                         <FormControlLabel
                           control={
@@ -379,7 +379,7 @@ export default function WebsiteSetupPage() {
                               onChange={handleFeatureChange}
                             />
                           }
-                          label="Newsletter Signup"
+                          label="News or blog section"
                         />
                       </Stack>
                     </Box>
