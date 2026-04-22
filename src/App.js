@@ -10,6 +10,8 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AIChatPage from './pages/AIChatPage';
 import MarketingPage from './pages/MarketingPage';
+import WebsiteMarketingPage from './pages/WebsiteMarketingPage';
+import WebsiteSetupPage from './pages/WebsiteSetupPage';
 
 export default function App() {
   return (
@@ -25,6 +27,8 @@ export default function App() {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/ai-chat" element={<AIChatPage />} />
               <Route path="/marketing" element={<MarketingPage />} />
+              <Route path="/marketing/website" element={<WebsiteMarketingPage />} />
+              <Route path="/marketing/website/setup" element={<WebsiteSetupPage />} />
             </Routes>
           </MainLayout>
         </Router>
