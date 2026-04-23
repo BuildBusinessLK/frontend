@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -10,6 +10,7 @@ import {
   TextField,
   Typography,
   useTheme,
+  CircularProgress,
 } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SendIcon from '@mui/icons-material/Send';
@@ -19,17 +20,7 @@ const initialMessages = [
   {
     id: 1,
     role: 'assistant',
-    text: 'Hi, I can help you draft marketing ideas, answer customer questions, and plan campaigns.',
-  },
-  {
-    id: 2,
-    role: 'user',
-    text: 'Can you help me grow my local business?',
-  },
-  {
-    id: 3,
-    role: 'assistant',
-    text: 'Yes. Start with a simple landing page, consistent social posts, and an email follow-up flow.',
+    text: 'Hi, I can help you understand the coconut industry trends, marketing, and business guidance. What would you like to know?',
   },
 ];
 
@@ -38,23 +29,64 @@ export default function AIChatPage() {
   const { mode } = useThemeMode();
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef(null);
 
-  const handleSend = () => {
-    const nextText = draft.trim();
-    if (!nextText) {
-      return;
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
+  }, [messages, isLoading]);
 
-    setMessages((current) => [
-      ...current,
-      { id: Date.now(), role: 'user', text: nextText },
-      {
-        id: Date.now() + 1,
-        role: 'assistant',
-        text: 'I can help with that. Try breaking it into a goal, an audience, and a simple next step.',
-      },
-    ]);
+  const handleSend = async () => {
+    const nextText = draft.trim();
+    if (!nextText || isLoading) return;
+
+    // 1. Add User Message to UI
+    const userMessage = { id: Date.now(), role: 'user', text: nextText };
+    setMessages((current) => [...current, userMessage]);
     setDraft('');
+    setIsLoading(true);
+
+    try {
+      // 2. Call your local API
+      const response = await fetch('http://localhost:8082/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question: nextText }),
+      });
+
+      const data = await response.json();
+
+      // 3. Add AI Response to UI
+      if (data.success) {
+        setMessages((current) => [
+          ...current,
+          {
+            id: Date.now() + 1,
+            role: 'assistant',
+            text: data.answer,
+          },
+        ]);
+      } else {
+        throw new Error(data.message || 'Something went wrong');
+      }
+    } catch (error) {
+      // Handle Errors
+      setMessages((current) => [
+        ...current,
+        {
+          id: Date.now() + 1,
+          role: 'assistant',
+          text: "Sorry, I'm having trouble connecting to the server. Please try again later.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -91,10 +123,10 @@ export default function AIChatPage() {
                 mb: 1,
               }}
             >
-              Chat with the assistant
+              BuildBusinessLK Assistant
             </Typography>
             <Typography sx={{ color: theme.palette.text.secondary, maxWidth: 680 }}>
-              A simple ChatGPT-style workspace for quick prompts, follow-up ideas, and business guidance.
+              Real-time insights and industry data powered by local market analysis.
             </Typography>
           </Box>
 
@@ -118,13 +150,16 @@ export default function AIChatPage() {
                 ))}
               </Stack>
               <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                BuildBusinessLK Assistant
+                AI Model Online
               </Typography>
             </Box>
 
             <Divider />
 
-            <Box sx={{ p: { xs: 2, md: 3 }, maxHeight: 520, overflowY: 'auto' }}>
+            <Box 
+              ref={scrollRef}
+              sx={{ p: { xs: 2, md: 3 }, height: 450, overflowY: 'auto', scrollBehavior: 'smooth' }}
+            >
               <Stack spacing={2.2}>
                 {messages.map((message) => {
                   const isUser = message.role === 'user';
@@ -138,9 +173,10 @@ export default function AIChatPage() {
                     >
                       <Box
                         sx={{
-                          maxWidth: '80%',
+                          maxWidth: '85%',
                           px: 2.2,
                           py: 1.5,
+                          whiteSpace: 'pre-line', // Maintains line breaks from API
                           borderRadius: isUser ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
                           background: isUser
                             ? 'linear-gradient(135deg, #22C55E, #16A34A)'
@@ -156,11 +192,9 @@ export default function AIChatPage() {
                       >
                         <Typography
                           sx={{
-                            color: isUser
-                              ? '#FFFFFF'
-                              : theme.palette.text.primary,
-                            lineHeight: 1.7,
-                            fontSize: '0.98rem',
+                            color: isUser ? '#FFFFFF' : theme.palette.text.primary,
+                            lineHeight: 1.6,
+                            fontSize: '0.92rem',
                           }}
                         >
                           {message.text}
@@ -169,6 +203,11 @@ export default function AIChatPage() {
                     </Box>
                   );
                 })}
+                {isLoading && (
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-start', pl: 1 }}>
+                    <CircularProgress size={20} sx={{ color: '#22C55E' }} />
+                  </Box>
+                )}
               </Stack>
             </Box>
 
@@ -182,8 +221,15 @@ export default function AIChatPage() {
                   minRows={1}
                   maxRows={4}
                   value={draft}
+                  disabled={isLoading}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
                   onChange={(event) => setDraft(event.target.value)}
-                  placeholder="Ask about marketing, content, or customer outreach..."
+                  placeholder="Ask about coconut industry, exports, or market trends..."
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       borderRadius: 3,
@@ -194,7 +240,8 @@ export default function AIChatPage() {
                 <Button
                   variant="contained"
                   onClick={handleSend}
-                  endIcon={<SendIcon />}
+                  disabled={isLoading || !draft.trim()}
+                  endIcon={isLoading ? <CircularProgress size={16} color="inherit" /> : <SendIcon />}
                   sx={{
                     borderRadius: 3,
                     px: 3,
@@ -206,7 +253,7 @@ export default function AIChatPage() {
                     },
                   }}
                 >
-                  Send
+                  {isLoading ? 'Thinking...' : 'Send'}
                 </Button>
               </Stack>
             </Box>
