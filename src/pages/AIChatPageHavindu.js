@@ -24,7 +24,7 @@ const initialMessages = [
   },
 ];
 
-export default function AIChatPage() {
+export default function AIChatPageHavindu() {
   const theme = useTheme();
   const { mode } = useThemeMode();
   const [messages, setMessages] = useState(initialMessages);
@@ -40,45 +40,54 @@ export default function AIChatPage() {
   }, [messages, isLoading]);
 
   const handleSend = async () => {
-  const text = draft.trim();
-  if (!text) return;
+    const nextText = draft.trim();
+    if (!nextText || isLoading) return;
 
-  // Add user message first
-  const userMessage = { role: 'user', text};
-  setMessages((prev) => [...prev, userMessage]);
+    // 1. Add User Message to UI
+    const userMessage = { id: Date.now(), role: 'user', text: nextText };
+    setMessages((current) => [...current, userMessage]);
+    setDraft('');
+    setIsLoading(true);
 
-  setDraft('');
+    try {
+      // 2. Call your local API
+      const response = await fetch('http://localhost:8082/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question: nextText }),
+      });
 
-  try {
-    const res = await fetch("http://127.0.0.1:5000/ai", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ message: text })
-    });
+      const data = await response.json();
 
-    const data = await res.json();
-
-    const botMessage = {
-      role: 'assistant',
-      text: data.response   // 👈 comes from Flask RAG
-    };
-
-    setMessages((prev) => [...prev, botMessage]);
-
-  } catch (error) {
-    console.error(error);
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: 'assistant',
-        text: "Server not responding."
+      // 3. Add AI Response to UI
+      if (data.success) {
+        setMessages((current) => [
+          ...current,
+          {
+            id: Date.now() + 1,
+            role: 'assistant',
+            text: data.answer,
+          },
+        ]);
+      } else {
+        throw new Error(data.message || 'Something went wrong');
       }
-    ]);
-  }
-};
+    } catch (error) {
+      // Handle Errors
+      setMessages((current) => [
+        ...current,
+        {
+          id: Date.now() + 1,
+          role: 'assistant',
+          text: "Sorry, I'm having trouble connecting to the server. Please try again later.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Box
