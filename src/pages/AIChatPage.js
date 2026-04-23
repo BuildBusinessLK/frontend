@@ -39,23 +39,46 @@ export default function AIChatPage() {
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState('');
 
-  const handleSend = () => {
-    const nextText = draft.trim();
-    if (!nextText) {
-      return;
-    }
+  const handleSend = async () => {
+  const text = draft.trim();
+  if (!text) return;
 
-    setMessages((current) => [
-      ...current,
-      { id: Date.now(), role: 'user', text: nextText },
-      {
-        id: Date.now() + 1,
-        role: 'assistant',
-        text: 'I can help with that. Try breaking it into a goal, an audience, and a simple next step.',
+  // Add user message first
+  const userMessage = { role: 'user', text};
+  setMessages((prev) => [...prev, userMessage]);
+
+  setDraft('');
+
+  try {
+    const res = await fetch("http://127.0.0.1:5000/ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
       },
+      body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+
+    const botMessage = {
+      role: 'assistant',
+      text: data.response   // 👈 comes from Flask RAG
+    };
+
+    setMessages((prev) => [...prev, botMessage]);
+
+  } catch (error) {
+    console.error(error);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'assistant',
+        text: "Server not responding."
+      }
     ]);
-    setDraft('');
-  };
+  }
+};
 
   return (
     <Box
