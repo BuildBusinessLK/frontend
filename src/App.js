@@ -8,7 +8,7 @@ import HomePage from './pages/HomePage';
 import SubscriptionsPage from './pages/SubscriptionsPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
-import AIChatPage from './pages/AIChatPageHavindu';
+import AIChatPage from './pages/AIChatPage';
 import MarketingPage from './pages/MarketingPage';
 import AIChatPageHavindu from './pages/AIChatPageHavindu';
 
