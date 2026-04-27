@@ -87,7 +87,7 @@ export default function WebsiteSetupPage() {
         setCompleted(true);
         // Redirect after 2 seconds
         setTimeout(() => {
-          navigate('/ai-chat');
+          navigate('/marketing/website/templates');
         }, 2000);
       } else {
         setError(result.message || 'Failed to save website setup');
@@ -101,7 +101,7 @@ export default function WebsiteSetupPage() {
       setTimeout(() => {
         setCompleted(true);
         setTimeout(() => {
-          navigate('/ai-chat');
+          navigate('/marketing/website/templates');
         }, 2000);
       }, 1500);
     }

@@ -12,6 +12,7 @@ import AIChatPage from './pages/AIChatPage';
 import MarketingPage from './pages/MarketingPage';
 import WebsiteMarketingPage from './pages/WebsiteMarketingPage';
 import WebsiteSetupPage from './pages/WebsiteSetupPage';
+import TemplateSelectionPage from './pages/TemplateSelectionPage';
 
 export default function App() {
   return (
@@ -20,7 +21,7 @@ export default function App() {
         <CssBaseline />
         <Router>
           <MainLayout>
-            <Routes>
+          <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/subscriptions" element={<SubscriptionsPage />} />
               <Route path="/about" element={<AboutPage />} />
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="/marketing" element={<MarketingPage />} />
               <Route path="/marketing/website" element={<WebsiteMarketingPage />} />
               <Route path="/marketing/website/setup" element={<WebsiteSetupPage />} />
+              <Route path="/marketing/website/templates" element={<TemplateSelectionPage />} />
             </Routes>
           </MainLayout>
         </Router>
