@@ -83,7 +83,15 @@ export default function TemplateSelectionPage() {
   const handleContinue = () => {
     if (selectedTemplate) {
       localStorage.setItem('selectedTemplate', selectedTemplate);
-      navigate('/ai-chat');
+      // Navigate directly to generated website page with template
+      const templateInfo = templates.find(t => t.id === selectedTemplate);
+      navigate('/generated-website', { 
+        state: { 
+          template: selectedTemplate,
+          templateName: templateInfo?.name,
+          templateImage: templateInfo?.image
+        } 
+      });
     }
   };
 
