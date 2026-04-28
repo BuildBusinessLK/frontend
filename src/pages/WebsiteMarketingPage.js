@@ -16,16 +16,20 @@ import { useThemeMode } from '../contexts/ThemeContext';
 
 const websiteFeatures = [
   {
-    title: 'Landing Pages',
-    description: 'Create compelling landing pages that capture visitor attention and drive conversions.',
+    title: 'High-Converting Landing Pages',
+    description: 'Design clean, attractive landing pages that highlight the uniqueness of your palm products. Capture attention instantly and turn visitors into buyers with a layout built for trust and engagement.',
   },
   {
-    title: 'Conversion Copy',
-    description: 'Generate persuasive copy tailored to your audience that converts visitors into customers.',
+    title: 'Persuasive Conversion Copy',
+    description: 'Use AI-powered content to craft compelling product descriptions and marketing messages tailored to your target audience. Showcase the natural quality, heritage, and value of your coconut, kithul, and palmyra products to boost sales.',
   },
   {
-    title: 'Lead Capture',
-    description: 'Build effective lead capture forms and follow-up sequences to nurture your prospects.',
+    title: 'Lead Capture & Customer Growth',
+    description: 'Create effective contact forms and lead capture systems to collect customer inquiries and orders. Build lasting relationships with follow-up messages and grow your customer base both locally and internationally.',
+  },
+  {
+    title: 'Expand Beyond Borders',
+    description: 'Take your palm-based business to the global market. Reach international customers, promote your products online, and scale your business with a modern, conversion-focused website.',
   },
 ];
 
@@ -74,8 +78,7 @@ export default function WebsiteMarketingPage() {
               Website Marketing
             </Typography>
             <Typography sx={{ maxWidth: 720, color: theme.palette.text.secondary, fontSize: '1.1rem' }}>
-              Create a clean landing page, product story, and contact flow that converts visitors into customers. 
-              AI-powered insights and copy generation to maximize your online presence.
+              Build a powerful online presence for your palm-based products—whether it’s coconut, kithul, or palmyra—and connect with customers locally and globally. Create a professional website that tells your story, showcases your products, and drives real business growth.
             </Typography>
           </Box>
 
