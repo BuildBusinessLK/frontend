@@ -159,7 +159,7 @@ export default function WebsiteMarketingPage() {
             <Button
               variant="contained"
               size="large"
-              onClick={() => navigate('/marketing/website/setup')}
+              onClick={() => navigate('/marketing/website/templates')}
               sx={{
                 borderRadius: 999,
                 px: 4,

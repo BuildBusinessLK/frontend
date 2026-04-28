@@ -25,8 +25,8 @@ import { useThemeMode } from '../contexts/ThemeContext';
 
 const steps = ['Business Details', 'AI Generation', 'Preview & Publish'];
 
-// Google AI Studio API Key - User provided
-const GOOGLE_AI_API_KEY = 'AIzaSyCTuJlrZTyx8vCsEAJqlFeZeDWR2TRMZjo';
+// Backend endpoint for AI generation
+const AI_API_ENDPOINT = 'http://localhost/campus/project/frontend/generate-website.php';
 
 const templatePrompts = {
   web1: 'Modern gradient design with vibrant gradients and smooth animations',
@@ -162,38 +162,20 @@ OUTPUT REQUIREMENTS:
 
 Generate the complete website code now.`;
 
-      // Call Google AI Studio API
-      const apiKey = GOOGLE_AI_API_KEY;
-      
-      if (!apiKey) {
-        // If no API key, show configuration prompt
-        setError('Please configure your Google AI Studio API key in settings');
-        setIsGenerating(false);
-        return;
-      }
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      // Call backend API endpoint
+      const response = await fetch(AI_API_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 8192,
-            topP: 0.95,
-            topK: 40
-          }
+          prompt: prompt
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate website. Please check your API key.');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate website. Please check your API key or try again.');
       }
 
       const data = await response.json();

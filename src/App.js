@@ -11,7 +11,6 @@ import ContactPage from './pages/ContactPage';
 import AIChatPage from './pages/AIChatPage';
 import MarketingPage from './pages/MarketingPage';
 import WebsiteMarketingPage from './pages/WebsiteMarketingPage';
-import WebsiteSetupPage from './pages/WebsiteSetupPage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import GeneratedWebsitePage from './pages/GeneratedWebsitePage';
 
@@ -30,7 +29,6 @@ export default function App() {
               <Route path="/ai-chat" element={<AIChatPage />} />
               <Route path="/marketing" element={<MarketingPage />} />
               <Route path="/marketing/website" element={<WebsiteMarketingPage />} />
-              <Route path="/marketing/website/setup" element={<WebsiteSetupPage />} />
               <Route path="/marketing/website/templates" element={<TemplateSelectionPage />} />
               <Route path="/generated-website" element={<GeneratedWebsitePage />} />
             </Routes>
