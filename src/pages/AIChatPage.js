@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Button,
+  Card,
+  CardContent,
   Chip,
   Container,
   Divider,
@@ -14,6 +16,8 @@ import {
 } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SendIcon from '@mui/icons-material/Send';
+import WebIcon from '@mui/icons-material/Web';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
 
 const initialMessages = [
@@ -27,8 +31,34 @@ const initialMessages = [
 export default function AIChatPage() {
   const theme = useTheme();
   const { mode } = useThemeMode();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState('');
+  
+  // Check if user came from template selection with intent to create website
+  const websiteAction = location.state?.action;
+  const selectedTemplate = location.state?.template;
+
+  // Template info
+  const templateNames = {
+    web1: 'Modern Gradient',
+    web2: 'Professional Business',
+    web3: 'Creative Portfolio',
+    web4: 'Minimalist Clean',
+    web5: 'E-Commerce Store',
+    web6: 'Content Hub',
+  };
+  
+  const handleCreateWebsite = () => {
+    // Navigate to the generated website page with template info
+    navigate('/generated-website', { 
+      state: { 
+        template: selectedTemplate,
+        templateName: templateNames[selectedTemplate]
+      } 
+    });
+  };
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef(null);
 
@@ -120,6 +150,58 @@ export default function AIChatPage() {
               Real-time insights and industry data powered by local market analysis.
             </Typography>
           </Box>
+
+          {/* Website Creation Prompt - Show when user came from template selection */}
+          {websiteAction === 'create-website' && selectedTemplate && (
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 4,
+                border: '1px solid rgba(34,197,94,0.3)',
+                background: mode === 'dark' 
+                  ? 'rgba(34,197,94,0.08)' 
+                  : 'rgba(34,197,94,0.08)',
+                overflow: 'hidden',
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Stack spacing={2}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <WebIcon sx={{ color: '#22C55E' }} />
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      Create Website with AI
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ color: theme.palette.text.secondary }}>
+                    You've selected the <strong>{templateNames[selectedTemplate]}</strong> template. 
+                    Click below to provide your business details and generate a complete website using Google AI Studio.
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Button
+                      variant="contained"
+                      onClick={handleCreateWebsite}
+                      sx={{
+                        borderRadius: 999,
+                        py: 1.5,
+                        px: 3,
+                        background: 'linear-gradient(135deg, #22C55E, #16A34A)',
+                        boxShadow: '0 14px 30px rgba(34,197,94,0.3)',
+                      }}
+                    >
+                      Create My Website
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      onClick={() => navigate('/marketing/website/templates')}
+                      sx={{ borderRadius: 999, py: 1.5, px: 3 }}
+                    >
+                      Change Template
+                    </Button>
+                  </Box>
+                </Stack>
+              </CardContent>
+            </Card>
+          )}
 
           <Paper
             elevation={0}

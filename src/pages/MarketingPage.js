@@ -11,6 +11,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import LanguageIcon from '@mui/icons-material/Language';
 import ShareIcon from '@mui/icons-material/Share';
 import EmailIcon from '@mui/icons-material/Email';
@@ -47,6 +48,7 @@ const marketingCards = [
 export default function MarketingPage() {
   const theme = useTheme();
   const { mode } = useThemeMode();
+  const navigate = useNavigate();
   const [selectedCard, setSelectedCard] = useState(marketingCards[0].id);
 
   const activeCard = useMemo(
@@ -208,6 +210,7 @@ export default function MarketingPage() {
             <Button
               variant="contained"
               endIcon={<ArrowForwardIcon />}
+              onClick={() => navigate(`/marketing/${activeCard.id}`)}
               sx={{
                 borderRadius: 999,
                 px: 3,
