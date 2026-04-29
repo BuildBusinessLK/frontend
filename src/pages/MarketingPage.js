@@ -17,6 +17,15 @@ import ShareIcon from '@mui/icons-material/Share';
 import EmailIcon from '@mui/icons-material/Email';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { useNavigate } from "react-router-dom";
+
+
+
+const routes = {
+  website: "/website",
+  social: "/social",
+  email: "/email",
+};
 
 const marketingCards = [
   {
@@ -211,6 +220,7 @@ export default function MarketingPage() {
               variant="contained"
               endIcon={<ArrowForwardIcon />}
               onClick={() => navigate(`/marketing/${activeCard.id}`)}
+              // onClick={() => navigate(routes[selectedCard])}
               sx={{
                 borderRadius: 999,
                 px: 3,

@@ -1,5 +1,4 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -9,11 +8,15 @@ import SubscriptionsPage from './pages/SubscriptionsPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AIChatPage from './pages/AIChatPage';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MarketingPage from './pages/MarketingPage';
 import AIChatPageHavindu from './pages/AIChatPageHavindu';
 import WebsiteMarketingPage from './pages/WebsiteMarketingPage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import GeneratedWebsitePage from './pages/GeneratedWebsitePage';
+import WebsitePage from './pages/WebsitePage';
+import SocialPage from './pages/SocialPage';
+import EmailPage from './pages/EmailPage';
 
 export default function App() {
   return (
@@ -22,14 +25,17 @@ export default function App() {
         <CssBaseline />
         <Router>
           <MainLayout>
-          <Routes>
+            <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/subscriptions" element={<SubscriptionsPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/ai-chat" element={<AIChatPage />} />
-              <Route path="/ai-chat-havindu" element={<AIChatPageHavindu />} />
               <Route path="/marketing" element={<MarketingPage />} />
+              <Route path="/website" element={<WebsitePage />} />
+              <Route path="/social" element={<SocialPage />} />
+              <Route path="/email" element={<EmailPage />} />
+              <Route path="/ai-chat-havindu" element={<AIChatPageHavindu />} />
               <Route path="/marketing/website" element={<WebsiteMarketingPage />} />
               <Route path="/marketing/website/templates" element={<TemplateSelectionPage />} />
               <Route path="/generated-website" element={<GeneratedWebsitePage />} />
@@ -39,4 +45,5 @@ export default function App() {
       </LanguageProvider>
     </ThemeProvider>
   );
+
 }
