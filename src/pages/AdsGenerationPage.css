@@ -1,0 +1,245 @@
+.ads-generation-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+}
+
+.ads-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 40px;
+}
+
+.ads-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.ads-header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.ads-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.ads-form-section {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.generate-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.generate-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+.generate-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ads-results-section {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  grid-column: 2;
+  grid-row: 1 / span 10;
+  max-height: 800px;
+  overflow-y: auto;
+}
+
+.ads-results-section h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+}
+
+.ads-results-section h3 {
+  color: #555;
+  margin-top: 20px;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.prompt-box,
+.ads-box {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #667eea;
+}
+
+.ads-content-display {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: #333;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.copy-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  transition: background 0.3s;
+}
+
+.copy-btn:hover {
+  background: #764ba2;
+}
+
+.share-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.share-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.share-btn {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: white;
+  font-size: 0.95rem;
+}
+
+.share-btn.facebook {
+  background: #1877f2;
+}
+
+.share-btn.facebook:hover {
+  background: #0a66c2;
+}
+
+.share-btn.instagram {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+
+.share-btn.instagram:hover {
+  opacity: 0.8;
+}
+
+.share-btn.tiktok {
+  background: #000;
+}
+
+.share-btn.tiktok:hover {
+  background: #333;
+}
+
+.share-btn.whatsapp {
+  background: #25d366;
+}
+
+.share-btn.whatsapp:hover {
+  background: #1ead50;
+}
+
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c62828;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ads-content {
+    grid-template-columns: 1fr;
+  }
+
+  .ads-results-section {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .ads-header h1 {
+    font-size: 2rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .share-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .ads-generation-container {
+    padding: 20px 10px;
+  }
+}
