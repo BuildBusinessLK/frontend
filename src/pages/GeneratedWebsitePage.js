@@ -596,7 +596,7 @@ See NETLIFY_DEPLOYMENT.md for detailed instructions.
                         label="Industry *"
                         value={formData.industry}
                         onChange={handleInputChange('industry')}
-                        placeholder="e.g., Restaurant, Technology, Healthcare"
+                        placeholder="e.g., coconut,kithul palm,palmyra palm"
                         required
                       />
                     </Grid>
@@ -617,7 +617,7 @@ See NETLIFY_DEPLOYMENT.md for detailed instructions.
                         label="Target Audience"
                         value={formData.targetAudience}
                         onChange={handleInputChange('targetAudience')}
-                        placeholder="e.g., Young professionals, Families"
+                        placeholder="e.g.,international buyers, sellers"
                       />
                     </Grid>
                     <Grid item xs={12} md={6}>
@@ -626,7 +626,7 @@ See NETLIFY_DEPLOYMENT.md for detailed instructions.
                         label="Website Goal"
                         value={formData.websiteGoal}
                         onChange={handleInputChange('websiteGoal')}
-                        placeholder="e.g., Generate leads, Sell products"
+                        placeholder="e.g.,  Sell products,Generate leads"
                       />
                     </Grid>
                     <Grid item xs={12}>
