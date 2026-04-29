@@ -32,9 +32,9 @@ export default function App() {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/ai-chat" element={<AIChatPage />} />
               <Route path="/marketing" element={<MarketingPage />} />
-              <Route path="/website" element={<WebsitePage />} />
-              <Route path="/social" element={<SocialPage />} />
-              <Route path="/email" element={<EmailPage />} />
+              {/* <Route path="/marketing/website" element={<WebsitePage />} /> */}
+              <Route path="/marketing/social" element={<SocialPage />} />
+              <Route path="/marketing/email" element={<EmailPage />} />
               <Route path="/ai-chat-havindu" element={<AIChatPageHavindu />} />
               <Route path="/marketing/website" element={<WebsiteMarketingPage />} />
               <Route path="/marketing/website/templates" element={<TemplateSelectionPage />} />
