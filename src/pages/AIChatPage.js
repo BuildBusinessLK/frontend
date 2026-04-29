@@ -56,7 +56,7 @@ const engines = {
     title: 'Llama 3 Knowledge Engine',
     shortName: 'Ollama Llama3',
     owner: 'Havindu',
-    endpoint: 'http://localhost:8082/ask',
+    endpoint: 'http://localhost:8083/ask',
     endpointLabel: '/ask',
     model: 'Ollama llama3',
     accent: 'linear-gradient(135deg, #22C55E, #16A34A)',
@@ -66,7 +66,7 @@ const engines = {
     description:
       'Spring Boot to Python RAG flow using local Llama 3 for structured knowledge-base responses.',
     placeholder: 'Ask the Llama 3 engine about exports, marketing, or business support...',
-    requestBody: (text) => ({ question: text }),
+    requestBody: (text, conversationId) => ({ question: text, conversationId }),
     getAnswer: (data) => {
       if (data.success === false) {
         throw new Error(data.message || 'The /ask engine returned an error.');
@@ -92,6 +92,14 @@ const createInitialMessages = (engine) => [
   },
 ];
 
+const createConversationId = () => {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  return `conversation-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
 export default function AIChatPage() {
   const theme = useTheme();
   const { mode } = useThemeMode();
@@ -102,6 +110,9 @@ export default function AIChatPage() {
   const [messagesByEngine, setMessagesByEngine] = useState(() => ({
     groq: createInitialMessages(engines.groq),
     ask: createInitialMessages(engines.ask),
+  }));
+  const [conversationIds, setConversationIds] = useState(() => ({
+    ask: createConversationId(),
   }));
   const [draft, setDraft] = useState('');
 
@@ -169,11 +180,17 @@ export default function AIChatPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(engine.requestBody(text)),
+        body: JSON.stringify(engine.requestBody(text, conversationIds[engine.id])),
       });
 
       const data = await response.json();
       const answer = engine.getAnswer(data);
+      if (data.conversationId) {
+        setConversationIds((current) => ({
+          ...current,
+          [engine.id]: data.conversationId,
+        }));
+      }
 
       if (!answer) {
         throw new Error('Empty AI response.');
