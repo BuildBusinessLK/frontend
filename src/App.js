@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -8,7 +9,6 @@ import SubscriptionsPage from './pages/SubscriptionsPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AIChatPage from './pages/AIChatPage';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MarketingPage from './pages/MarketingPage';
 import AIChatPageHavindu from './pages/AIChatPageHavindu';
 import WebsiteMarketingPage from './pages/WebsiteMarketingPage';
