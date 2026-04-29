@@ -10,7 +10,6 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AIChatPage from './pages/AIChatPage';
 import MarketingPage from './pages/MarketingPage';
-import AIChatPageHavindu from './pages/AIChatPageHavindu';
 import WebsiteMarketingPage from './pages/WebsiteMarketingPage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import GeneratedWebsitePage from './pages/GeneratedWebsitePage';
@@ -46,7 +45,7 @@ export default function App() {
                     {/* <Route path="/marketing/website" element={<WebsitePage />} /> */}
                     <Route path="/marketing/social" element={<SocialPage />} />
                     <Route path="/marketing/email" element={<EmailPage />} />
-                    <Route path="/ai-chat-havindu" element={<AIChatPageHavindu />} />
+                    <Route path="/ai-chat-havindu" element={<AIChatPage />} />
                     <Route path="/marketing/website" element={<WebsiteMarketingPage />} />
                     <Route path="/marketing/website/templates" element={<TemplateSelectionPage />} />
                     <Route path="/generated-website" element={<GeneratedWebsitePage />} />
