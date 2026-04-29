@@ -13,6 +13,7 @@ import MarketingPage from './pages/MarketingPage';
 import WebsiteMarketingPage from './pages/WebsiteMarketingPage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import GeneratedWebsitePage from './pages/GeneratedWebsitePage';
+import NetlifyCallback from './pages/NetlifyCallback';
 
 export default function App() {
   return (
@@ -20,19 +21,30 @@ export default function App() {
       <LanguageProvider>
         <CssBaseline />
         <Router>
-          <MainLayout>
           <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/subscriptions" element={<SubscriptionsPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/ai-chat" element={<AIChatPage />} />
-              <Route path="/marketing" element={<MarketingPage />} />
-              <Route path="/marketing/website" element={<WebsiteMarketingPage />} />
-              <Route path="/marketing/website/templates" element={<TemplateSelectionPage />} />
-              <Route path="/generated-website" element={<GeneratedWebsitePage />} />
-            </Routes>
-          </MainLayout>
+            {/* Netlify OAuth Callback - Not in MainLayout */}
+            <Route path="/netlify-callback" element={<NetlifyCallback />} />
+            
+            {/* Main Routes */}
+            <Route
+              path="/*"
+              element={
+                <MainLayout>
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/subscriptions" element={<SubscriptionsPage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/ai-chat" element={<AIChatPage />} />
+                    <Route path="/marketing" element={<MarketingPage />} />
+                    <Route path="/marketing/website" element={<WebsiteMarketingPage />} />
+                    <Route path="/marketing/website/templates" element={<TemplateSelectionPage />} />
+                    <Route path="/generated-website" element={<GeneratedWebsitePage />} />
+                  </Routes>
+                </MainLayout>
+              }
+            />
+          </Routes>
         </Router>
       </LanguageProvider>
     </ThemeProvider>
