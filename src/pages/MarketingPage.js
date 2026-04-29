@@ -17,15 +17,15 @@ import ShareIcon from '@mui/icons-material/Share';
 import EmailIcon from '@mui/icons-material/Email';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CampaignIcon from '@mui/icons-material/Campaign';
-import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
 
 
 
 const routes = {
-  website: "/website",
-  social: "/social",
-  email: "/email",
+  website: '/marketing/website',
+  social: '/marketing/social',
+  ads: '/marketing/ad-generator/setup',
+  email: '/marketing/email',
 };
 
 const marketingCards = [
@@ -67,7 +67,6 @@ export default function MarketingPage() {
   const theme = useTheme();
   const navigate = useNavigate();
   const { mode } = useThemeMode();
-  const navigate = useNavigate();
   const [selectedCard, setSelectedCard] = useState(marketingCards[0].id);
 
   const activeCard = useMemo(
@@ -76,10 +75,7 @@ export default function MarketingPage() {
   );
 
   const handleStart = () => {
-    if (activeCard.id === 'ads') {
-      navigate('/marketing/ad-generator/setup');
-      return;
-    }
+    navigate(routes[activeCard.id]);
   };
 
   return (
@@ -236,7 +232,7 @@ export default function MarketingPage() {
             <Button
               variant="contained"
               endIcon={<ArrowForwardIcon />}
-              onClick={() => navigate(`/marketing/${activeCard.id}`)}
+              onClick={handleStart}
               sx={{
                 borderRadius: 999,
                 px: 3,
@@ -250,42 +246,6 @@ export default function MarketingPage() {
             >
               {activeCard.id === 'ads' ? 'Generate Ad' : `Start with ${activeCard.title}`}
             </Button>
-
-            {/* <Button
-              variant="contained"
-              endIcon={<ArrowForwardIcon />}
-              onClick={() => navigate(routes[selectedCard])}
-              sx={{
-                borderRadius: 999,
-                px: 3,
-                py: 1.2,
-                background: activeCard.accent,
-                boxShadow: '0 14px 30px rgba(0,0,0,0.18)',
-                '&:hover': {
-                  background: activeCard.accent,
-                },
-              }}
-            >
-              Start with {activeCard.title}
-            </Button>
-
-            {/* <Button
-              variant="contained"
-              endIcon={<ArrowForwardIcon />}
-              onClick={() => navigate(routes[selectedCard])}
-              sx={{
-                borderRadius: 999,
-                px: 3,
-                py: 1.2,
-                background: activeCard.accent,
-                boxShadow: '0 14px 30px rgba(0,0,0,0.18)',
-                '&:hover': {
-                  background: activeCard.accent,
-                },
-              }}
-            >
-              Start with {activeCard.title}
-            </Button> */}
           </Box>
         </Stack>
       </Container>
