@@ -23,6 +23,7 @@ import axios from 'axios';
 import { useThemeMode } from '../contexts/ThemeContext';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5003';
+const ADS_GENERATOR_URL = 'https://atxp.pics/chat';
 
 const platformOptions = [
   { value: 'facebook', label: 'Facebook' },
@@ -172,16 +173,31 @@ export default function SocialPage() {
     setAdError('');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/generate`, {
-        idea: adIdea,
-        tone,
-        platform,
-      });
+      const prompt = [
+        'Create a creative business ad based on the following user idea.',
+        `Idea: ${adIdea.trim()}`,
+        `Tone: ${tone}`,
+        `Platform: ${platform}`,
+        'Write compelling copy, a strong headline, and a clear call to action.',
+      ].join('\n');
 
-      setAd(response.data.ad);
+      // Copy prompt to clipboard
+      await navigator.clipboard.writeText(prompt);
+
+      // Open external site in new window
+      const externalUrl = `${ADS_GENERATOR_URL}?occasion=business`;
+      window.open(externalUrl, '_blank', 'noopener,noreferrer');
+
+      // Show confirmation
+      setAd({
+        headline: '✓ Prompt copied & generator opened',
+        description: 'Your prompt has been automatically copied to clipboard. The ATXP ad generator opened in a new window.',
+        cta: 'Paste your prompt in the generator',
+        prompt,
+      });
     } catch (error) {
       console.error(error);
-      setAdError('Failed to generate ad. Check the backend endpoint and try again.');
+      setAdError('Failed to copy prompt or open generator. Please try again.');
     } finally {
       setLoadingAd(false);
     }
@@ -357,13 +373,33 @@ export default function SocialPage() {
                 {ad && (
                   <Paper sx={{ mt: 3, p: 2.5, borderRadius: 2, background: mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.82)' }}>
                     <Typography variant="overline" sx={{ letterSpacing: '0.2em' }}>
-                      Ad Result
+                      Ad Generator Status
                     </Typography>
                     <Typography variant="h5" sx={{ fontWeight: 800, mt: 1, mb: 1 }}>
                       {ad.headline}
                     </Typography>
                     <Typography sx={{ color: theme.palette.text.secondary, mb: 2 }}>{ad.description}</Typography>
                     <Chip label={ad.cta} color="primary" />
+                    {ad.prompt && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
+                          Your Generated Prompt
+                        </Typography>
+                        <Paper
+                          variant="outlined"
+                          sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.75)',
+                            whiteSpace: 'pre-wrap',
+                          }}
+                        >
+                          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                            {ad.prompt}
+                          </Typography>
+                        </Paper>
+                      </Box>
+                    )}
                   </Paper>
                 )}
               </CardContent>
