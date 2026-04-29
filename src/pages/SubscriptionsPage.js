@@ -1,6 +1,7 @@
 import React from 'react';
 import { Container, Typography, Box, Card, CardContent, Button, Grid } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { useNavigate } from 'react-router-dom';
 
 const plans = [
   {
@@ -25,6 +26,12 @@ const plans = [
 ];
 
 export default function SubscriptionsPage() {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate('/marketing/website/templates');
+  };
+
   return (
     <Box sx={{ py: 12, minHeight: '80vh' }}>
       <Container maxWidth="lg">
@@ -104,6 +111,7 @@ export default function SubscriptionsPage() {
                     ))}
                   </Box>
                   <Button
+                    onClick={handleGetStarted}
                     variant={plan.popular ? 'contained' : 'outlined'}
                     fullWidth
                     sx={{

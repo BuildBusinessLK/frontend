@@ -40,7 +40,8 @@ export default function Navbar() {
 
   const navLinks = [
     { label: t.links.home, path: '/' },
-    { label: 'AI Chat', path: '/ai-chat' },
+    { label: 'AI Chat Hiumie', path: '/ai-chat' },
+    { label: 'AI Chat Havindu', path: '/ai-chat-havindu' },
     { label: 'Marketing', path: '/marketing' },
     { label: t.links.subscriptions, path: '/subscriptions' },
     { label: t.links.about, path: '/about' },
