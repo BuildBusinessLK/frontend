@@ -15,6 +15,8 @@ import LanguageIcon from '@mui/icons-material/Language';
 import ShareIcon from '@mui/icons-material/Share';
 import EmailIcon from '@mui/icons-material/Email';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CampaignIcon from '@mui/icons-material/Campaign';
+import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
 
 const marketingCards = [
@@ -35,6 +37,14 @@ const marketingCards = [
     stats: ['Post calendar', 'Short video', 'Audience growth'],
   },
   {
+    id: 'ads',
+    title: 'Ad Generator',
+    description: 'Write ad copy from a prompt or your saved shop details, then preview a polished campaign visual.',
+    icon: <CampaignIcon fontSize="inherit" />,
+    accent: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+    stats: ['Prompt mode', 'Shop details', 'JPG preview'],
+  },
+  {
     id: 'email',
     title: 'Email',
     description: 'Build welcome sequences, promotions, and follow-ups that keep customers engaged.',
@@ -46,6 +56,7 @@ const marketingCards = [
 
 export default function MarketingPage() {
   const theme = useTheme();
+  const navigate = useNavigate();
   const { mode } = useThemeMode();
   const [selectedCard, setSelectedCard] = useState(marketingCards[0].id);
 
@@ -53,6 +64,13 @@ export default function MarketingPage() {
     () => marketingCards.find((card) => card.id === selectedCard) ?? marketingCards[0],
     [selectedCard]
   );
+
+  const handleStart = () => {
+    if (activeCard.id === 'ads') {
+      navigate('/marketing/ad-generator/setup');
+      return;
+    }
+  };
 
   return (
     <Box
@@ -208,6 +226,7 @@ export default function MarketingPage() {
             <Button
               variant="contained"
               endIcon={<ArrowForwardIcon />}
+              onClick={handleStart}
               sx={{
                 borderRadius: 999,
                 px: 3,
@@ -219,7 +238,7 @@ export default function MarketingPage() {
                 },
               }}
             >
-              Start with {activeCard.title}
+              {activeCard.id === 'ads' ? 'Generate Ad' : `Start with ${activeCard.title}`}
             </Button>
           </Box>
         </Stack>
