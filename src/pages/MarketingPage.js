@@ -16,6 +16,8 @@ import LanguageIcon from '@mui/icons-material/Language';
 import ShareIcon from '@mui/icons-material/Share';
 import EmailIcon from '@mui/icons-material/Email';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CampaignIcon from '@mui/icons-material/Campaign';
+import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
 
 
@@ -44,6 +46,14 @@ const marketingCards = [
     stats: ['Post calendar', 'Short video', 'Audience growth'],
   },
   {
+    id: 'ads',
+    title: 'Ad Generator',
+    description: 'Write ad copy from a prompt or your saved shop details, then preview a polished campaign visual.',
+    icon: <CampaignIcon fontSize="inherit" />,
+    accent: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
+    stats: ['Prompt mode', 'Shop details', 'JPG preview'],
+  },
+  {
     id: 'email',
     title: 'Email',
     description: 'Build welcome sequences, promotions, and follow-ups that keep customers engaged.',
@@ -55,6 +65,7 @@ const marketingCards = [
 
 export default function MarketingPage() {
   const theme = useTheme();
+  const navigate = useNavigate();
   const { mode } = useThemeMode();
   const navigate = useNavigate();
   const [selectedCard, setSelectedCard] = useState(marketingCards[0].id);
@@ -63,6 +74,13 @@ export default function MarketingPage() {
     () => marketingCards.find((card) => card.id === selectedCard) ?? marketingCards[0],
     [selectedCard]
   );
+
+  const handleStart = () => {
+    if (activeCard.id === 'ads') {
+      navigate('/marketing/ad-generator/setup');
+      return;
+    }
+  };
 
   return (
     <Box
@@ -219,6 +237,24 @@ export default function MarketingPage() {
               variant="contained"
               endIcon={<ArrowForwardIcon />}
               onClick={() => navigate(`/marketing/${activeCard.id}`)}
+              sx={{
+                borderRadius: 999,
+                px: 3,
+                py: 1.2,
+                background: activeCard.accent,
+                boxShadow: '0 14px 30px rgba(0,0,0,0.18)',
+                '&:hover': {
+                  background: activeCard.accent,
+                },
+              }}
+            >
+              {activeCard.id === 'ads' ? 'Generate Ad' : `Start with ${activeCard.title}`}
+            </Button>
+
+            {/* <Button
+              variant="contained"
+              endIcon={<ArrowForwardIcon />}
+              onClick={() => navigate(routes[selectedCard])}
               sx={{
                 borderRadius: 999,
                 px: 3,

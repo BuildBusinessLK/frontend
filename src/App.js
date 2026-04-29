@@ -18,6 +18,8 @@ import WebsitePage from './pages/WebsitePage';
 import SocialPage from './pages/SocialPage';
 import EmailPage from './pages/EmailPage';
 import NetlifyCallback from './pages/NetlifyCallback';
+import ShopSetupPage from './pages/ShopSetupPage';
+import AdGeneratorPage from './pages/AdGeneratorPage';
 
 export default function App() {
   return (
@@ -48,7 +50,9 @@ export default function App() {
                     <Route path="/marketing/website" element={<WebsiteMarketingPage />} />
                     <Route path="/marketing/website/templates" element={<TemplateSelectionPage />} />
                     <Route path="/generated-website" element={<GeneratedWebsitePage />} />
-                    
+
+                    <Route path="/marketing/ad-generator/setup" element={<ShopSetupPage />} />
+                    <Route path="/marketing/ad-generator" element={<AdGeneratorPage />} />
                   </Routes>
                 </MainLayout>
               }
