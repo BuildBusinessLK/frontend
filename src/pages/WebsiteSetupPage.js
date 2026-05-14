@@ -72,8 +72,8 @@ export default function WebsiteSetupPage() {
       // Save to localStorage (backup)
       localStorage.setItem('websiteSetup', JSON.stringify(formData));
 
-      // Send to PHP backend
-      const response = await fetch('http://localhost/campus/project/frontend/save-website-setup.php', {
+      // Send to Spring Boot backend
+      const response = await fetch('http://localhost:8083/api/website/setups', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

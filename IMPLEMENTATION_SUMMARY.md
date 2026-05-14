@@ -105,7 +105,7 @@ Website is LIVE! 🎉
 
 ### Modified Files:
 - ✅ `src/pages/GeneratedWebsitePage.js` - Download & dialog
-- ✅ `generate-website.php` - Fallback generator
+- ✅ Spring Boot backend - Website generator API + fallback
 
 ### Total:
 - 6 documentation files

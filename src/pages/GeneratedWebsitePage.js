@@ -42,7 +42,7 @@ import {
 const steps = ['Business Details', 'AI Generation', 'Preview & Publish'];
 
 // Backend endpoint for AI generation
-const AI_API_ENDPOINT = 'http://localhost/campus/project/frontend/generate-website.php';
+const AI_API_ENDPOINT = 'http://localhost:8083/api/website/generate';
 
 const templatePrompts = {
   web1: 'Modern gradient design with vibrant gradients and smooth animations',

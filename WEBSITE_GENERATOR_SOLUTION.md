@@ -16,8 +16,8 @@ The application was getting a `429 RESOURCE_EXHAUSTED` error from Google's Gemin
 - Provides fallback status information during generation
 
 ### 3. **Security Improvements** ✓
-- Updated `generate-website.php` to read API key from environment variables
-- Reduces risk of API key exposure in source code
+- Spring Boot backend reads the API key from environment variables
+- Avoids exposing API keys in frontend or committed server scripts
 
 ### 4. **Graceful Degradation** ✓
 - If API is unavailable → uses template generator
@@ -31,7 +31,7 @@ User fills form
     ↓
 Frontend calls generate-website.php with prompt
     ↓
-PHP tries to call Google Gemini API
+Spring Boot tries to call Google Gemini API
     ↓
 [If API succeeds] → Returns AI-generated custom website
 [If API fails/quota exceeded] → Automatically returns professional template website
@@ -58,18 +58,12 @@ Frontend displays generated website
 GOOGLE_AI_API_KEY=your_actual_api_key_here
 ```
 
-2. The PHP backend will automatically use this variable
+2. Start the Spring Boot backend with this environment variable available
 
-### Option 2: Update API Key in PHP
-Edit `generate-website.php` line ~25:
-```php
-$apiKey = getenv('GOOGLE_AI_API_KEY') ?: 'your_new_api_key';
-```
-
-### Option 3: Upgrade Google AI Plan
+### Option 2: Upgrade Google AI Plan
 - Visit: https://ai.google.dev/
 - Upgrade from free tier to paid plan
-- Replace API key in `.env` or PHP file
+- Replace API key in your environment variables
 
 ## What Changed
 
@@ -81,11 +75,12 @@ $apiKey = getenv('GOOGLE_AI_API_KEY') ?: 'your_new_api_key';
 - UI now indicates if using template generator vs AI
 
 ### Backend Changes (`generate-website.php`)
-- Added `generateFallbackWebsite()` function with complete HTML template
-- Detects 429/quota errors and automatically returns template
+### Backend Changes (Spring Boot)
+- Added `POST /api/website/generate` which calls Gemini when available
+- Detects 429/quota errors and automatically returns a fallback template
 - Handles connection errors gracefully
-- Uses environment variables for API key
-- Preserves all fallback metadata in response
+- Uses `GOOGLE_AI_API_KEY` from environment variables
+- Preserves fallback metadata (`fallback: true`, optional `message`) in response
 
 ## Testing
 
@@ -96,9 +91,8 @@ Try the website generator now - it will:
 4. Always deliver a working website
 
 ## Files Modified
-- `d:\campus\project\frontend\src\pages\GeneratedWebsitePage.js` - Frontend logic
-- `d:\campus\project\frontend\generate-website.php` - Backend with fallback
-- `d:\campus\project\frontend\.env.example` - Environment variable template
+- `src/pages/GeneratedWebsitePage.js` - Frontend logic
+- Spring Boot backend endpoint: `POST http://localhost:8083/api/website/generate`
 
 ## Future Enhancements
 - [ ] Implement result caching to reduce API calls
