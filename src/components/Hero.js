@@ -398,7 +398,7 @@ export default function Hero() {
             background:
               mode === 'dark'
                 ? 'linear-gradient(0deg, rgba(6,10,13,0.86) 0%, rgba(6,10,13,0.68) 85%, rgba(6,10,13,0.35) 100%)'
-                : 'rgba(360,360,360,0.63)',
+                : 'rgba(255,255,255,0.32)',
             pointerEvents: 'none',
           }}
         />

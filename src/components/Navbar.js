@@ -58,7 +58,9 @@ export default function Navbar() {
       position="fixed"
       elevation={0}
       sx={{
-        background: 'transparent',
+        background: mode === 'dark'
+          ? (scrolled ? colors.overlay.medium : colors.overlay.light)
+          : 'transparent',
         backdropFilter: 'blur(24px)',
         borderBottom: scrolled
           ? `1px solid ${colors.border.primary}`
