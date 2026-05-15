@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8082/api/marketing';
+const API_BASE_URL = process.env.REACT_APP_MARKETING_API_BASE_URL || 'http://localhost:8082/api/marketing';
 
 async function parseResponse(response) {
   const data = await response.json().catch(() => ({}));

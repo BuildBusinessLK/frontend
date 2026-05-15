@@ -24,6 +24,8 @@ const initialMessages = [
   },
 ];
 
+const SPRING_BACKEND_BASE_URL = process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
+
 export default function AIChatPageHavindu() {
   const theme = useTheme();
   const { mode } = useThemeMode();
@@ -51,7 +53,7 @@ export default function AIChatPageHavindu() {
 
     try {
       // 2. Call your local API
-      const response = await fetch('http://localhost:8082/ask', {
+      const response = await fetch(`${SPRING_BACKEND_BASE_URL}/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

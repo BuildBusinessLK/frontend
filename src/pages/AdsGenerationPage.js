@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './AdsGenerationPage.css';
 
+const ADS_API_URL = process.env.REACT_APP_ADS_API_URL || 'http://localhost:8080/api/ads/generate';
+
 const AdsGenerationPage = () => {
   const [formData, setFormData] = useState({
     idea: '',
@@ -27,7 +29,7 @@ const AdsGenerationPage = () => {
     setError(null);
 
     try {
-      const res = await fetch('http://localhost:8080/api/ads/generate', {
+      const res = await fetch(ADS_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

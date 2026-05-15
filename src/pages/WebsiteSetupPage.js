@@ -22,6 +22,8 @@ export default function WebsiteSetupPage() {
   const theme = useTheme();
   const { mode } = useThemeMode();
   const navigate = useNavigate();
+
+  const springBackendBaseUrl = process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
   
   const [formData, setFormData] = useState({
     businessName: '',
@@ -73,7 +75,7 @@ export default function WebsiteSetupPage() {
       localStorage.setItem('websiteSetup', JSON.stringify(formData));
 
       // Send to Spring Boot backend
-      const response = await fetch('http://localhost:8083/api/website/setups', {
+      const response = await fetch(`${springBackendBaseUrl}/api/website/setups`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

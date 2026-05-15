@@ -23,13 +23,16 @@ import CloudQueueIcon from '@mui/icons-material/CloudQueue';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
 
+const SPRING_BACKEND_BASE_URL = process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
+const GROQ_ENGINE_URL = process.env.REACT_APP_GROQ_ENGINE_URL || 'http://127.0.0.1:5000/ai';
+
 const engines = {
   groq: {
     id: 'groq',
     title: 'Groq Cloud AI',
     shortName: 'Groq API',
     owner: 'Hiumie',
-    endpoint: 'http://127.0.0.1:5000/ai',
+    endpoint: GROQ_ENGINE_URL,
     endpointLabel: '/ai',
     model: 'Groq Cloud API LLM',
     accent: 'linear-gradient(135deg, #2563EB, #7C3AED)',
@@ -56,7 +59,7 @@ const engines = {
     title: 'Llama 3 Knowledge Engine',
     shortName: 'Ollama Llama3',
     owner: 'Havindu',
-    endpoint: 'http://localhost:8083/ask',
+    endpoint: `${SPRING_BACKEND_BASE_URL}/ask`,
     endpointLabel: '/ask',
     model: 'Ollama llama3',
     accent: 'linear-gradient(135deg, #22C55E, #16A34A)',
