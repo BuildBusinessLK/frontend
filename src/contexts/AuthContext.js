@@ -1,44 +1,83 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  readStoredSession,
+  writeStoredSession,
+  apiRegister,
+  apiLogin,
+  apiFetchMe,
+} from '../services/authApi';
 
 const AuthContext = createContext(null);
 
-const STORAGE_KEY = 'bb_auth_user';
-
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [session, setSession] = useState(() => readStoredSession());
 
-  const signIn = useCallback((email, _password) => {
-    const u = { email, name: email.split('@')[0] };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-    setUser(u);
+  useEffect(() => {
+    try {
+      localStorage.removeItem('bb_auth_user');
+    } catch {
+      /* ignore legacy demo key */
+    }
   }, []);
 
-  const signUp = useCallback((name, email, _password) => {
-    const u = { email, name: String(name || '').trim() || email.split('@')[0] };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-    setUser(u);
+  const user = session?.user ?? null;
+  const token = session?.token ?? null;
+  const isAuthenticated = Boolean(token && user);
+
+  const signIn = useCallback(async (email, password) => {
+    const next = await apiLogin({ email: email.trim(), password });
+    writeStoredSession(next);
+    setSession(next);
+  }, []);
+
+  const signUp = useCallback(async (fullName, email, password) => {
+    const next = await apiRegister({
+      fullName: fullName.trim(),
+      email: email.trim(),
+      password,
+    });
+    writeStoredSession(next);
+    setSession(next);
   }, []);
 
   const signOut = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setUser(null);
+    writeStoredSession(null);
+    setSession(null);
   }, []);
+
+  const setUser = useCallback((nextUser) => {
+    setSession((prev) => {
+      if (!prev?.token) return prev;
+      const merged = { ...prev, user: nextUser };
+      writeStoredSession(merged);
+      return merged;
+    });
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (!token) return null;
+    try {
+      const profile = await apiFetchMe(token);
+      setUser(profile);
+      return profile;
+    } catch {
+      signOut();
+      return null;
+    }
+  }, [token, setUser, signOut]);
 
   const value = useMemo(
     () => ({
       user,
+      token,
+      isAuthenticated,
       signIn,
       signUp,
       signOut,
+      setUser,
+      refreshProfile,
     }),
-    [user, signIn, signUp, signOut],
+    [user, token, isAuthenticated, signIn, signUp, signOut, setUser, refreshProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

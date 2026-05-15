@@ -13,11 +13,14 @@ import {
 import SendIcon from '@mui/icons-material/Send';
 import WebIcon from '@mui/icons-material/Web';
 import PsychologyIcon from '@mui/icons-material/Psychology';
+import RocketLaunchRoundedIcon from '@mui/icons-material/RocketLaunchRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { AssistantFormattedText } from '../utils/assistantTextFormat';
 import { ROUTES } from '../constants/routes';
 import { useChatPageTopPadding } from '../hooks/useDashboardLayoutPadding';
+import { authHeaders } from '../services/authApi';
 
 const SPRING_BACKEND_BASE_URL =
   process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
@@ -44,6 +47,7 @@ const ENGINE = {
     { label: 'Export process', query: 'Explain the coconut export process' },
     { label: 'Marketing channels', query: 'What marketing channels work best for rural SMEs?' },
     { label: 'Business support', query: 'What business support programs are available?' },
+    { label: 'My website', query: 'I want to create a simple website for my SME' },
   ],
   requestBody: (text, conversationId) => ({ question: text, conversationId }),
   getAnswer: (data) => {
@@ -59,6 +63,13 @@ const createInitialMessages = () => [{ id: 'ask-intro', role: 'assistant', text:
 const createConversationId = () =>
   window.crypto?.randomUUID?.() ||
   `conversation-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+function messageSuggestsWebsite(text) {
+  if (!text || typeof text !== 'string') return false;
+  return /(website|web\s*site|landing\s*page|create\s+(a\s+)?site|build\s+(a\s+)?site|business\s+site|online\s+presence|need\s+a\s+site)/i.test(
+    text,
+  );
+}
 
 const getTime = () =>
   new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -140,6 +151,7 @@ export default function AIChatPage() {
   const [conversationId] = useState(createConversationId);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(false);
+  const [websiteNudge, setWebsiteNudge] = useState(false);
 
   const isLoading = loading;
   const scrollRef = useRef(null);
@@ -155,6 +167,12 @@ export default function AIChatPage() {
     web5: 'E-Commerce Store',
     web6: 'Content Hub',
   };
+
+  /* website-intent detection */
+  useEffect(() => {
+    const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+    setWebsiteNudge(lastUser ? messageSuggestsWebsite(lastUser.text) : false);
+  }, [messages]);
 
   /* auto-scroll */
   useEffect(() => {
@@ -175,7 +193,7 @@ export default function AIChatPage() {
     try {
       const response = await fetch(engine.endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(engine.requestBody(text, conversationId)),
       });
       const data = await response.json();
@@ -258,6 +276,17 @@ export default function AIChatPage() {
                 >
                   {activeEngine.description}
                 </Typography>
+                <Stack direction="row" spacing={1} sx={{ mt: 0 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    endIcon={<RocketLaunchRoundedIcon sx={{ fontSize: 16 }} />}
+                    onClick={() => navigate(ROUTES.marketing2.studio)}
+                    sx={{ mt: 1, borderRadius: 999, textTransform: 'none', fontSize: '12px', fontWeight: 700 }}
+                  >
+                    Website studio
+                  </Button>
+                </Stack>
               </Box>
 
               <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
@@ -523,6 +552,60 @@ export default function AIChatPage() {
             }}
           >
             <Box sx={{ maxWidth: CHAT_COLUMN_PX, mx: 'auto' }}>
+              {websiteNudge && (
+                <Card
+                  elevation={0}
+                  sx={{
+                    mb: 1.25,
+                    borderRadius: 2.5,
+                    border: '1px solid rgba(34,197,94,0.35)',
+                    background: isDark ? 'rgba(34,197,94,0.09)' : 'rgba(34,197,94,0.06)',
+                  }}
+                >
+                  <CardContent sx={{ py: 1.5, px: 2, '&:last-child': { pb: 1.5 } }}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 2,
+                          background: 'linear-gradient(135deg, #22C55E, #16A34A)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          color: '#fff',
+                        }}
+                      >
+                        <WebIcon sx={{ fontSize: 22 }} />
+                      </Box>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 800, fontSize: '14px' }}>Create your business website</Typography>
+                        <Typography variant="caption" sx={{ color: theme.palette.text.secondary, display: 'block' }}>
+                          Open the SME studio — generate, preview, and host on BuildBusinessLK in a few steps.
+                        </Typography>
+                      </Box>
+                      <Button
+                        variant="contained"
+                        size="medium"
+                        endIcon={<ArrowForwardRoundedIcon />}
+                        onClick={() => navigate(ROUTES.marketing2.studio)}
+                        sx={{
+                          flexShrink: 0,
+                          borderRadius: 999,
+                          px: 2,
+                          fontWeight: 800,
+                          fontSize: '12px',
+                          background: 'linear-gradient(135deg, #22C55E, #16A34A)',
+                          boxShadow: '0 8px 20px rgba(34,197,94,0.25)',
+                        }}
+                      >
+                        Open
+                      </Button>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              )}
               {/* Input row */}
               <Box
                 sx={{

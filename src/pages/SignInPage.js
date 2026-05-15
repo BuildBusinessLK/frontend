@@ -37,6 +37,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const fromRaw = location.state?.from;
   const redirectTo =
@@ -46,7 +47,7 @@ export default function SignInPage() {
     return <Navigate to={redirectTo} replace />;
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const em = email.trim();
     if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
@@ -58,8 +59,15 @@ export default function SignInPage() {
       return;
     }
     setError('');
-    signIn(em, password);
-    navigate(redirectTo, { replace: true });
+    setLoading(true);
+    try {
+      await signIn(em, password);
+      navigate(redirectTo, { replace: true });
+    } catch (err) {
+      setError(err.message || 'Sign in failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -189,6 +197,7 @@ export default function SignInPage() {
                   type="submit"
                   variant="contained"
                   size="large"
+                  disabled={loading}
                   sx={{
                     mt: 1,
                     py: 1.4,
@@ -202,7 +211,7 @@ export default function SignInPage() {
                     },
                   }}
                 >
-                  Sign in
+                  {loading ? 'Signing in…' : 'Sign in'}
                 </Button>
               </Stack>
             </Box>

@@ -11,6 +11,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Stack,
   Toolbar,
   Tooltip,
   Typography,
@@ -34,6 +35,7 @@ import HubRoundedIcon from '@mui/icons-material/HubRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import RocketLaunchRoundedIcon from '@mui/icons-material/RocketLaunchRounded';
 import WebAssetRoundedIcon from '@mui/icons-material/WebAssetRounded';
+import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
@@ -41,6 +43,7 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '../constants/routes';
 import { alpha, brand, getThemeColors, gradients, shadows } from '../theme';
+import ProfileDialog from '../components/ProfileDialog';
 
 const DRAWER_W = 280;
 
@@ -92,6 +95,7 @@ export default function DashboardLayout() {
   const [marketing2Open, setMarketing2Open] = useState(() =>
     location.pathname.startsWith(ROUTES.marketing2.root),
   );
+  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     if (location.pathname.startsWith(ROUTES.marketing.root)) {
@@ -289,15 +293,24 @@ export default function DashboardLayout() {
       <Divider sx={{ borderColor: colors.border.secondary, mx: 1, mb: 1 }} />
 
       <Box sx={{ px: 1.5, py: 1.25, borderRadius: 3, bgcolor: mode === 'dark' ? alpha.white['04'] : alpha.black['03'], border: `1px solid ${colors.border.secondary}` }}>
-        <Typography variant="caption" sx={{ opacity: 0.55, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700 }}>
-          Signed in
-        </Typography>
-        <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mt: 0.25 }} noWrap title={user?.email}>
-          {user?.name || 'Entrepreneur'}
-        </Typography>
-        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
-          {user?.email}
-        </Typography>
+        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography variant="caption" sx={{ opacity: 0.55, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700 }}>
+              Signed in
+            </Typography>
+            <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', mt: 0.25 }} noWrap title={user?.email}>
+              {user?.fullName || user?.name || 'Entrepreneur'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+              {user?.email}
+            </Typography>
+          </Box>
+          <Tooltip title="Profile & AI context">
+            <IconButton size="small" onClick={() => setProfileOpen(true)} sx={{ color: colors.text.secondary, mt: -0.25 }}>
+              <AccountCircleRoundedIcon />
+            </IconButton>
+          </Tooltip>
+        </Stack>
         <Typography
           component="button"
           type="button"
@@ -329,7 +342,8 @@ export default function DashboardLayout() {
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', background: shellBg }}>
+    <>
+      <Box sx={{ display: 'flex', minHeight: '100vh', background: shellBg }}>
       <AppBar
         position="fixed"
         elevation={0}
@@ -346,6 +360,11 @@ export default function DashboardLayout() {
             <MenuIcon />
           </IconButton>
           <Typography sx={{ flex: 1, fontWeight: 800 }}>Workspace</Typography>
+          <Tooltip title="Profile & AI context">
+            <IconButton onClick={() => setProfileOpen(true)} sx={{ color: colors.text.primary }}>
+              <AccountCircleRoundedIcon />
+            </IconButton>
+          </Tooltip>
           <Tooltip title={mode === 'dark' ? 'Light mode' : 'Dark mode'}>
             <IconButton onClick={toggleTheme} sx={{ color: colors.text.primary }}>
               {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
@@ -418,6 +437,11 @@ export default function DashboardLayout() {
             pb: 0,
           }}
         >
+          <Tooltip title="Profile & AI context">
+            <IconButton size="small" onClick={() => setProfileOpen(true)} sx={{ color: colors.text.secondary }}>
+              <AccountCircleRoundedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title={mode === 'dark' ? 'Light mode' : 'Dark mode'}>
             <IconButton size="small" onClick={toggleTheme} sx={{ color: colors.text.secondary }}>
               {mode === 'dark' ? <Brightness7Icon fontSize="small" /> : <Brightness4Icon fontSize="small" />}
@@ -452,5 +476,7 @@ export default function DashboardLayout() {
         </Box>
       </Box>
     </Box>
+      <ProfileDialog open={profileOpen} onClose={() => setProfileOpen(false)} />
+    </>
   );
 }

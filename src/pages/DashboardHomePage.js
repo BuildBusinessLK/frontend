@@ -69,7 +69,7 @@ export default function DashboardHomePage() {
             }}
           />
           <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: '-0.03em', mb: 1 }}>
-            {user?.name ? `Hi ${user.name}, momentum looks good.` : 'Welcome aboard.'}
+            {user?.fullName || user?.name ? `Hi ${user.fullName || user.name}, momentum looks good.` : 'Welcome aboard.'}
           </Typography>
           <Typography sx={{ maxWidth: 720, color: theme.palette.text.secondary, lineHeight: 1.7 }}>
             This shell mirrors what you pitched: interactive AI counselling, modular marketing workflows, website creation, then continuous tracking layered on Coconut · Kithul · Palmyra domains.

@@ -1,3 +1,5 @@
+import { authHeaders } from './authApi';
+
 const SPRING_BASE =
   process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
 
@@ -16,7 +18,7 @@ const SPRING_BASE =
 export async function generateSmeWebsite(payload) {
   const res = await fetch(`${SPRING_BASE}/api/sme-website/generate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
@@ -42,7 +44,7 @@ export function publicSmeSiteApiUrl(slug) {
 export async function publishSmeSite(payload) {
   const res = await fetch(`${SPRING_BASE}/api/sme-website/publish`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));

@@ -37,12 +37,13 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const n = name.trim();
     const em = email.trim();
@@ -59,8 +60,15 @@ export default function SignUpPage() {
       return;
     }
     setError('');
-    signUp(n, em, password);
-    navigate('/dashboard');
+    setLoading(true);
+    try {
+      await signUp(n, em, password);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message || 'Could not create account.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -145,7 +153,7 @@ export default function SignUpPage() {
                 <Box>
                   <Typography sx={{ fontWeight: 900, letterSpacing: '-0.03em' }}>Create workspace</Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Demo auth · local persistence
+                    Secure account · Spring Boot + MySQL
                   </Typography>
                 </Box>
               </Box>
@@ -192,7 +200,7 @@ export default function SignUpPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   fullWidth
                   required
-                  helperText="Minimum 8 characters · stored only in this browser for the demo."
+                  helperText="Minimum 8 characters."
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -212,6 +220,7 @@ export default function SignUpPage() {
                   type="submit"
                   variant="contained"
                   size="large"
+                  disabled={loading}
                   sx={{
                     mt: 1,
                     py: 1.4,
@@ -225,7 +234,7 @@ export default function SignUpPage() {
                     },
                   }}
                 >
-                  Sign up & enter workspace
+                  {loading ? 'Creating account…' : 'Sign up & enter workspace'}
                 </Button>
               </Stack>
             </Box>
