@@ -13,6 +13,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { ROUTES } from '../constants/routes';
+import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 
 const websiteFeatures = [
   {
@@ -37,12 +39,13 @@ export default function WebsiteMarketingPage() {
   const theme = useTheme();
   const { mode } = useThemeMode();
   const navigate = useNavigate();
+  const pagePt = useMarketingPageTopPadding();
 
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        pt: { xs: 12, md: 14 },
+        pt: pagePt,
         pb: 8,
         background:
           mode === 'dark'
@@ -55,7 +58,7 @@ export default function WebsiteMarketingPage() {
           <Box>
             <Button
               startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/marketing')}
+              onClick={() => navigate(ROUTES.marketing.root)}
               sx={{
                 mb: 2,
                 color: theme.palette.text.secondary,
@@ -162,7 +165,7 @@ export default function WebsiteMarketingPage() {
             <Button
               variant="contained"
               size="large"
-              onClick={() => navigate('/marketing/website/templates')}
+              onClick={() => navigate(ROUTES.marketing.websiteTemplates)}
               sx={{
                 borderRadius: 999,
                 px: 4,

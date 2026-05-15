@@ -2,6 +2,7 @@ import React from 'react';
 import { Container, Typography, Box, Card, CardContent, Button, Grid } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../constants/routes';
 
 const plans = [
   {
@@ -29,7 +30,7 @@ export default function SubscriptionsPage() {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    navigate('/marketing/website/templates');
+    navigate(ROUTES.marketing.websiteTemplates);
   };
 
   return (

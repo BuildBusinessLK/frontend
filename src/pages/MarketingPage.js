@@ -18,14 +18,14 @@ import EmailIcon from '@mui/icons-material/Email';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import { useThemeMode } from '../contexts/ThemeContext';
-
-
+import { ROUTES } from '../constants/routes';
+import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 
 const routes = {
-  website: '/marketing/website',
-  social: '/marketing/social',
-  ads: '/marketing/ad-generator/setup',
-  email: '/marketing/email',
+  website: ROUTES.marketing.website,
+  social: ROUTES.marketing.social,
+  ads: ROUTES.marketing.adSetup,
+  email: ROUTES.marketing.email,
 };
 
 const marketingCards = [
@@ -67,6 +67,7 @@ export default function MarketingPage() {
   const theme = useTheme();
   const navigate = useNavigate();
   const { mode } = useThemeMode();
+  const pagePt = useMarketingPageTopPadding();
   const [selectedCard, setSelectedCard] = useState(marketingCards[0].id);
 
   const activeCard = useMemo(
@@ -82,7 +83,7 @@ export default function MarketingPage() {
     <Box
       sx={{
         minHeight: '100vh',
-        pt: { xs: 12, md: 14 },
+        pt: pagePt,
         pb: 8,
         background:
           mode === 'dark'

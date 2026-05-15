@@ -26,10 +26,12 @@ import { useThemeMode } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { translations } from '../translations';
 import { gradients, getThemeColors, shadows, alpha } from '../theme';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
   const theme = useTheme();
   const { mode, toggleTheme } = useThemeMode();
+  const { user, signOut } = useAuth();
   const { language, toggleLanguage } = useLanguage();
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -40,8 +42,6 @@ export default function Navbar() {
 
   const navLinks = [
     { label: t.links.home, path: '/' },
-    { label: 'AI Assistant', path: '/ai-chat' },
-    { label: 'Marketing', path: '/marketing' },
     { label: t.links.subscriptions, path: '/subscriptions' },
     { label: t.links.about, path: '/about' },
     { label: t.links.contact, path: '/contact' },
@@ -185,9 +185,30 @@ export default function Navbar() {
               </Tooltip>
 
               <Button
-                variant="contained"
+                variant="text"
+                component={Link}
+                to="/sign-in"
                 sx={{
-                  ml: 1.5,
+                  ml: 1,
+                  px: 2,
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  color: mode === 'dark' ? alpha.white[80] : alpha.gray[85],
+                  '&:hover': {
+                    background: mode === 'dark' ? alpha.white[10] : alpha.black['05'],
+                    color: colors.text.primary,
+                  },
+                }}
+              >
+                Sign in
+              </Button>
+
+              <Button
+                variant="contained"
+                component={Link}
+                to={user ? '/dashboard' : '/sign-up'}
+                sx={{
+                  ml: 1,
                   px: 3,
                   py: 1,
                   fontSize: '0.95rem',
@@ -202,7 +223,7 @@ export default function Navbar() {
                   transition: 'all 0.2s ease',
                 }}
               >
-                {t.actions.getStarted}
+                {user ? 'Workspace' : t.actions.getStarted}
               </Button>
             </Box>
           )}
@@ -294,10 +315,29 @@ export default function Navbar() {
               </ListItem>
             );
           })}
-          <ListItem sx={{ mt: 2 }}>
+          <ListItem sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              component={Link}
+              to="/sign-in"
+              onClick={() => setDrawerOpen(false)}
+              sx={{
+                borderRadius: 50,
+                py: 1.1,
+                fontWeight: 700,
+                borderColor: colors.border.hover,
+                color: colors.text.primary,
+              }}
+            >
+              Sign in
+            </Button>
             <Button
               fullWidth
               variant="contained"
+              component={Link}
+              to={user ? '/dashboard' : '/sign-up'}
+              onClick={() => setDrawerOpen(false)}
               sx={{
                 background: gradients.primary,
                 color: '#FFFFFF',
@@ -312,8 +352,21 @@ export default function Navbar() {
                 },
               }}
             >
-              {t.actions.getStarted}
+              {user ? 'Workspace' : t.actions.getStarted}
             </Button>
+            {user && (
+              <Button
+                fullWidth
+                variant="text"
+                onClick={() => {
+                  signOut();
+                  setDrawerOpen(false);
+                }}
+                sx={{ fontWeight: 600, color: colors.text.secondary }}
+              >
+                Sign out
+              </Button>
+            )}
           </ListItem>
         </List>
       </Drawer>

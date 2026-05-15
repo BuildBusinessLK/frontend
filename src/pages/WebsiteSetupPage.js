@@ -17,11 +17,14 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckIcon from '@mui/icons-material/Check';
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { ROUTES } from '../constants/routes';
+import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 
 export default function WebsiteSetupPage() {
   const theme = useTheme();
   const { mode } = useThemeMode();
   const navigate = useNavigate();
+  const pagePt = useMarketingPageTopPadding();
 
   const springBackendBaseUrl = process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
   
@@ -89,7 +92,7 @@ export default function WebsiteSetupPage() {
         setCompleted(true);
         // Redirect after 2 seconds
         setTimeout(() => {
-          navigate('/marketing/website/templates');
+          navigate(ROUTES.marketing.websiteTemplates);
         }, 2000);
       } else {
         setError(result.message || 'Failed to save website setup');
@@ -103,7 +106,7 @@ export default function WebsiteSetupPage() {
       setTimeout(() => {
         setCompleted(true);
         setTimeout(() => {
-          navigate('/marketing/website/templates');
+          navigate(ROUTES.marketing.websiteTemplates);
         }, 2000);
       }, 1500);
     }
@@ -126,7 +129,7 @@ export default function WebsiteSetupPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          pt: { xs: 12, md: 14 },
+          pt: pagePt,
           pb: 8,
           background:
             mode === 'dark'
@@ -178,7 +181,7 @@ export default function WebsiteSetupPage() {
     <Box
       sx={{
         minHeight: '100vh',
-        pt: { xs: 12, md: 14 },
+        pt: pagePt,
         pb: 8,
         background:
           mode === 'dark'
@@ -191,7 +194,7 @@ export default function WebsiteSetupPage() {
           <Box>
             <Button
               startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/marketing/website')}
+              onClick={() => navigate(ROUTES.marketing.website)}
               sx={{
                 mb: 2,
                 color: theme.palette.text.secondary,
@@ -487,7 +490,7 @@ export default function WebsiteSetupPage() {
                     <Button
                       fullWidth
                       variant="outlined"
-                      onClick={() => navigate('/marketing/website')}
+                      onClick={() => navigate(ROUTES.marketing.website)}
                       disabled={loading}
                       sx={{
                         borderRadius: 999,

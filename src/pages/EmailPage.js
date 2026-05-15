@@ -17,6 +17,7 @@ import {
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SendIcon from '@mui/icons-material/Send';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5003';
@@ -32,6 +33,7 @@ const getApiErrorMessage = (error, fallbackMessage) => {
 export default function EmailPage() {
   const theme = useTheme();
   const { mode } = useThemeMode();
+  const pagePt = useMarketingPageTopPadding();
   
   // Email generation state
   const [emailIdea, setEmailIdea] = useState('');
@@ -130,7 +132,7 @@ export default function EmailPage() {
     <Box
       sx={{
         minHeight: '100vh',
-        pt: { xs: 12, md: 14 },
+        pt: pagePt,
         pb: 8,
         background:
           mode === 'dark'

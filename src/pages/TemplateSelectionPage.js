@@ -17,6 +17,8 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { ROUTES } from '../constants/routes';
+import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 
 import web1 from '../assets/web1.jpg';
 import web2 from '../assets/web2.jpg';
@@ -68,6 +70,7 @@ export default function TemplateSelectionPage() {
   const theme = useTheme();
   const { mode } = useThemeMode();
   const navigate = useNavigate();
+  const pagePt = useMarketingPageTopPadding();
   const [selectedTemplate, setSelectedTemplate] = React.useState(null);
   const [fullImageTemplate, setFullImageTemplate] = React.useState(null);
 
@@ -85,7 +88,7 @@ export default function TemplateSelectionPage() {
       localStorage.setItem('selectedTemplate', selectedTemplate);
       // Navigate directly to generated website page with template
       const templateInfo = templates.find(t => t.id === selectedTemplate);
-      navigate('/generated-website', { 
+      navigate(ROUTES.generatedWebsite, { 
         state: { 
           template: selectedTemplate,
           templateName: templateInfo?.name,
@@ -99,7 +102,7 @@ export default function TemplateSelectionPage() {
     <Box
       sx={{
         minHeight: '100vh',
-        pt: { xs: 12, md: 14 },
+        pt: pagePt,
         pb: 8,
         background:
           mode === 'dark'

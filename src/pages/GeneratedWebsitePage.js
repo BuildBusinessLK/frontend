@@ -31,6 +31,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CloudDoneIcon from '@mui/icons-material/CloudDone';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 import {
   isNetlifyAuthenticated,
   getNetlifyAuthUrl,
@@ -59,7 +60,8 @@ export default function GeneratedWebsitePage() {
   const { mode } = useThemeMode();
   const navigate = useNavigate();
   const location = useLocation();
-  
+  const pagePt = useMarketingPageTopPadding();
+
   const [activeStep, setActiveStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCode, setGeneratedCode] = useState(null);
@@ -488,7 +490,7 @@ See NETLIFY_DEPLOYMENT.md for detailed instructions.
     <Box
       sx={{
         minHeight: '100vh',
-        pt: { xs: 12, md: 14 },
+        pt: pagePt,
         pb: 8,
         background:
           mode === 'dark'

@@ -21,6 +21,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import axios from 'axios';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5003';
 const ADS_GENERATOR_URL = 'https://atxp.pics/chat';
@@ -133,6 +134,7 @@ const buildPostPngDataUrl = async (post, platform) => {
 export default function SocialPage() {
   const theme = useTheme();
   const { mode } = useThemeMode();
+  const pagePt = useMarketingPageTopPadding();
 
   const [adIdea, setAdIdea] = useState('');
   const [tone, setTone] = useState('professional');
@@ -302,7 +304,7 @@ export default function SocialPage() {
     <Box
       sx={{
         minHeight: '100vh',
-        pt: { xs: 12, md: 14 },
+        pt: pagePt,
         pb: 8,
         background:
           mode === 'dark'

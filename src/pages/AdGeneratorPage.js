@@ -20,12 +20,15 @@ import EditNoteIcon from '@mui/icons-material/EditNote';
 import ImageIcon from '@mui/icons-material/Image';
 import { Link, useLocation } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { ROUTES } from '../constants/routes';
+import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 import { fetchShopProfile, generateAd } from '../lib/marketingApi';
 
 export default function AdGeneratorPage() {
   const theme = useTheme();
   const location = useLocation();
   const { mode } = useThemeMode();
+  const pagePt = useMarketingPageTopPadding();
   const [shopProfile, setShopProfile] = useState(null);
   const [useShopDetails, setUseShopDetails] = useState(true);
   const [prompt, setPrompt] = useState('');
@@ -87,7 +90,7 @@ export default function AdGeneratorPage() {
     <Box
       sx={{
         minHeight: '100vh',
-        pt: { xs: 12, md: 14 },
+        pt: pagePt,
         pb: 8,
         background:
           mode === 'dark'
@@ -145,7 +148,7 @@ export default function AdGeneratorPage() {
                   />
                   <Button
                     component={Link}
-                    to="/marketing/ad-generator/setup"
+                    to={ROUTES.marketing.adSetup}
                     startIcon={<StorefrontIcon />}
                     variant="outlined"
                     sx={{ borderRadius: 999, alignSelf: { xs: 'flex-start', sm: 'center' } }}

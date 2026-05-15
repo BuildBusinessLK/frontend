@@ -57,7 +57,9 @@ export default function Features() {
   const colors = getThemeColors(mode);
   
   return (
-    <Box sx={{ 
+    <Box
+      id="features"
+      sx={{
       py: { xs: 10, md: 14 }, 
       background: mode === 'dark' 
         ? `linear-gradient(180deg, ${colors.background.primary} 0%, ${colors.background.secondary} 50%, ${colors.background.primary} 100%)` 

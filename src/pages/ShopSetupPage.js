@@ -16,6 +16,8 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { ROUTES } from '../constants/routes';
+import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 import { fetchShopProfile, saveShopProfile } from '../lib/marketingApi';
 
 const initialForm = {
@@ -34,6 +36,7 @@ export default function ShopSetupPage() {
   const theme = useTheme();
   const navigate = useNavigate();
   const { mode } = useThemeMode();
+  const pagePt = useMarketingPageTopPadding();
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
@@ -92,7 +95,7 @@ export default function ShopSetupPage() {
 
     try {
       await saveShopProfile(form);
-      navigate('/marketing/ad-generator', {
+      navigate(ROUTES.marketing.adGenerator, {
         state: {
           successMessage: 'Shop details saved. You can now generate ads using your shop information.',
         },
@@ -108,7 +111,7 @@ export default function ShopSetupPage() {
     <Box
       sx={{
         minHeight: '100vh',
-        pt: { xs: 12, md: 14 },
+        pt: pagePt,
         pb: 8,
         background:
           mode === 'dark'

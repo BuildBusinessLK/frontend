@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { Box, Container, Typography, Button, Grid, Stack, Chip, useTheme, IconButton } from '@mui/material';
 import { motion } from 'framer-motion';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -508,6 +509,8 @@ export default function Hero() {
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                   <Button
                     variant="contained"
+                    component={RouterLink}
+                    to="/sign-up"
                     size="large"
                     endIcon={<ArrowForwardIcon />}
                     sx={{
@@ -530,6 +533,8 @@ export default function Hero() {
                   </Button>
                   <Button
                     variant="outlined"
+                    component={RouterLink}
+                    to="#features"
                     size="large"
                     startIcon={<PlayCircleOutlineIcon />}
                     sx={{
