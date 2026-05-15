@@ -21,13 +21,14 @@ import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
+import OpenInBrowserRoundedIcon from '@mui/icons-material/OpenInBrowserRounded';
 import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { alpha, getThemeColors, gradients, shadows } from '../theme';
-import { generateSmeWebsite } from '../services/smeWebsiteApi';
-import { ROUTES } from '../constants/routes';
+import { generateSmeWebsite, publishSmeSite } from '../services/smeWebsiteApi';
+import { ROUTES, hostedBusinessPath } from '../constants/routes';
 
 const STORAGE_KEY = 'bbk-sme-site-draft-v1';
 
@@ -82,12 +83,25 @@ export default function SmeWebsiteStudioPage() {
   const [err, setErr] = useState(null);
   const [result, setResult] = useState(null);
 
+  const [publishSlug, setPublishSlug] = useState('');
+  const [publishBusy, setPublishBusy] = useState(false);
+  const [publishErr, setPublishErr] = useState(null);
+  const [publishedUrl, setPublishedUrl] = useState(null);
+
   useEffect(() => {
     const t = setTimeout(() => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
     }, 350);
     return () => clearTimeout(t);
   }, [form]);
+
+  useEffect(() => {
+    if (result?.suggestedSubdomain) {
+      setPublishSlug(result.suggestedSubdomain);
+      setPublishedUrl(null);
+      setPublishErr(null);
+    }
+  }, [result]);
 
   const setField = useCallback((key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -194,6 +208,46 @@ export default function SmeWebsiteStudioPage() {
       await navigator.clipboard.writeText(line);
     } catch {
       /* ignore */
+    }
+  };
+
+  const publicUrlPreview = useMemo(() => {
+    const s = (publishSlug || '').trim() || 'your-slug';
+    if (typeof window === 'undefined') {
+      return `/business/${encodeURIComponent(s)}`;
+    }
+    return `${window.location.origin}${hostedBusinessPath(s)}`;
+  }, [publishSlug]);
+
+  const runPublish = async () => {
+    setPublishErr(null);
+    setPublishedUrl(null);
+    if (!result?.previewHtml) {
+      setPublishErr('Generate a site first.');
+      return;
+    }
+    const slug = (publishSlug || '').trim();
+    if (slug.length < 2) {
+      setPublishErr('Choose a URL slug (at least 2 characters).');
+      return;
+    }
+    setPublishBusy(true);
+    try {
+      const data = await publishSmeSite({
+        slug,
+        previewHtml: result.previewHtml,
+        templateKey: form.theme,
+        manifest: result.manifest,
+        businessName: form.businessName,
+      });
+      const path = hostedBusinessPath(data.slug);
+      const full = `${window.location.origin}${path}`;
+      setPublishedUrl(full);
+      window.open(path, '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      setPublishErr(e.message || 'Publish failed');
+    } finally {
+      setPublishBusy(false);
     }
   };
 
@@ -400,6 +454,27 @@ export default function SmeWebsiteStudioPage() {
                     </Typography>
                   ) : null}
                 </Alert>
+                {publishErr && (
+                  <Alert severity="error" onClose={() => setPublishErr(null)}>
+                    {publishErr}
+                  </Alert>
+                )}
+                {publishedUrl && (
+                  <Alert severity="success" onClose={() => setPublishedUrl(null)}>
+                    Live at{' '}
+                    <Typography component="a" href={publishedUrl} target="_blank" rel="noopener noreferrer" sx={{ fontWeight: 700 }}>
+                      {publishedUrl}
+                    </Typography>
+                  </Alert>
+                )}
+                <TextField
+                  label="URL slug (hosted path)"
+                  size="small"
+                  value={publishSlug}
+                  onChange={(e) => setPublishSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-'))}
+                  helperText={publicUrlPreview}
+                  sx={{ maxWidth: 520 }}
+                />
                 <Stack direction="row" flexWrap="wrap" gap={1}>
                   <Button variant="outlined" startIcon={<DownloadRoundedIcon />} onClick={downloadHtml} sx={{ borderRadius: 999 }}>
                     Download index.html
@@ -407,9 +482,22 @@ export default function SmeWebsiteStudioPage() {
                   <Button variant="outlined" startIcon={<ContentCopyRoundedIcon />} onClick={copyHostHint} sx={{ borderRadius: 999 }}>
                     Copy host pattern
                   </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<OpenInBrowserRoundedIcon />}
+                    onClick={runPublish}
+                    disabled={publishBusy || !result.previewHtml}
+                    sx={{ borderRadius: 999, fontWeight: 800, background: gradients.primary, boxShadow: shadows.colored.green }}
+                  >
+                    {publishBusy ? 'Publishing…' : 'Host on BuildBusinessLK'}
+                  </Button>
                 </Stack>
                 <Typography variant="caption" sx={{ color: colors.text.secondary }}>
-                  Re-open this page anytime — your brief autosaves in the browser (MVP). Wire manifest to a DB for a real owner dashboard + subdomain hosting.
+                  Publishing stores HTML + manifest in MySQL and opens{' '}
+                  <Typography component="span" sx={{ fontFamily: 'ui-monospace, monospace' }}>
+                    /business/…
+                  </Typography>{' '}
+                  on this app. Re-publish updates the same slug. Later you can render from manifest + fixed templates only.
                 </Typography>
                 <Box
                   sx={{

@@ -20,3 +20,8 @@ export const ROUTES = {
   },
   generatedWebsite: '/dashboard/generated-website',
 };
+
+/** Public hosted SME site: /business/:slug (e.g. http://localhost:3000/business/koko-lanka) */
+export function hostedBusinessPath(slug) {
+  return `/business/${encodeURIComponent(slug)}`;
+}

@@ -25,3 +25,41 @@ export async function generateSmeWebsite(payload) {
   }
   return data;
 }
+
+export function publicSmeSiteApiUrl(slug) {
+  return `${SPRING_BASE}/api/public/sme-sites/${encodeURIComponent(slug)}`;
+}
+
+/**
+ * @param {{
+ *   slug: string,
+ *   previewHtml: string,
+ *   templateKey?: string,
+ *   manifest?: object,
+ *   businessName?: string
+ * }} payload
+ */
+export async function publishSmeSite(payload) {
+  const res = await fetch(`${SPRING_BASE}/api/sme-website/publish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || data.message || `Publish failed (${res.status})`);
+  }
+  return data;
+}
+
+/**
+ * @returns {Promise<{ slug: string, businessName: string, templateKey: string, html: string }>}
+ */
+export async function fetchPublicSmeSite(slug) {
+  const res = await fetch(`${SPRING_BASE}/api/public/sme-sites/${encodeURIComponent(slug)}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || `Not found (${res.status})`);
+  }
+  return data;
+}

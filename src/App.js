@@ -27,6 +27,7 @@ import DashboardHomePage from './pages/DashboardHomePage';
 import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
 import Marketing2HubPage from './pages/Marketing2HubPage';
 import SmeWebsiteStudioPage from './pages/SmeWebsiteStudioPage';
+import HostedSmeBusinessPage from './pages/HostedSmeBusinessPage';
 
 function LegacyMarketingRedirect() {
   const { pathname } = useLocation();
@@ -43,6 +44,7 @@ export default function App() {
           <Router>
             <Routes>
               <Route path="/netlify-callback" element={<NetlifyCallback />} />
+              <Route path="/business/:slug" element={<HostedSmeBusinessPage />} />
 
               <Route
                 path="/dashboard"
