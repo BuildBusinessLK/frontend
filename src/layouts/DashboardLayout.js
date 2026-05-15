@@ -32,6 +32,8 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import LanguageIcon from '@mui/icons-material/Language';
 import HubRoundedIcon from '@mui/icons-material/HubRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import RocketLaunchRoundedIcon from '@mui/icons-material/RocketLaunchRounded';
+import WebAssetRoundedIcon from '@mui/icons-material/WebAssetRounded';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
@@ -87,10 +89,19 @@ export default function DashboardLayout() {
   const [marketingOpen, setMarketingOpen] = useState(() =>
     location.pathname.startsWith(ROUTES.marketing.root),
   );
+  const [marketing2Open, setMarketing2Open] = useState(() =>
+    location.pathname.startsWith(ROUTES.marketing2.root),
+  );
 
   useEffect(() => {
     if (location.pathname.startsWith(ROUTES.marketing.root)) {
       setMarketingOpen(true);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (location.pathname.startsWith(ROUTES.marketing2.root)) {
+      setMarketing2Open(true);
     }
   }, [location.pathname]);
 
@@ -218,6 +229,47 @@ export default function DashboardLayout() {
               dense
               selected={path === ROUTES.marketing.email}
               to={ROUTES.marketing.email}
+              onClick={handleNav}
+            />
+          </List>
+        </Collapse>
+
+        {/* Marketing 2 — SME website studio */}
+        <ListItemButton
+          onClick={() => setMarketing2Open((o) => !o)}
+          sx={{
+            borderRadius: 2,
+            mb: 0.25,
+            py: 1.1,
+            pl: 2,
+            bgcolor:
+              path.startsWith(ROUTES.marketing2.root) && path !== ROUTES.marketing2.root
+                ? mode === 'dark'
+                  ? 'rgba(245,158,11,0.07)'
+                  : 'rgba(245,158,11,0.07)'
+                : 'transparent',
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>
+            <RocketLaunchRoundedIcon />
+          </ListItemIcon>
+          <ListItemText
+            primary="Marketing 2"
+            secondary="SME website builder"
+            primaryTypographyProps={{ fontWeight: 650, fontSize: '0.925rem' }}
+            secondaryTypographyProps={{ variant: 'caption', sx: { opacity: 0.65 } }}
+          />
+          {marketing2Open ? <ExpandLess /> : <ExpandMore />}
+        </ListItemButton>
+
+        <Collapse in={marketing2Open} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding sx={{ pl: 1, pr: 0.5 }}>
+            <NavTile
+              icon={<WebAssetRoundedIcon sx={{ fontSize: 22 }} />}
+              primary="Create your personalized website"
+              dense
+              selected={path.startsWith(ROUTES.marketing2.root)}
+              to={ROUTES.marketing2.studio}
               onClick={handleNav}
             />
           </List>

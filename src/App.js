@@ -25,6 +25,8 @@ import ShopSetupPage from './pages/ShopSetupPage';
 import AdGeneratorPage from './pages/AdGeneratorPage';
 import DashboardHomePage from './pages/DashboardHomePage';
 import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
+import Marketing2HubPage from './pages/Marketing2HubPage';
+import SmeWebsiteStudioPage from './pages/SmeWebsiteStudioPage';
 
 function LegacyMarketingRedirect() {
   const { pathname } = useLocation();
@@ -60,6 +62,8 @@ export default function App() {
                 <Route path="marketing/email" element={<EmailPage />} />
                 <Route path="marketing/ad-generator/setup" element={<ShopSetupPage />} />
                 <Route path="marketing/ad-generator" element={<AdGeneratorPage />} />
+                <Route path="marketing-2" element={<Marketing2HubPage />} />
+                <Route path="marketing-2/studio" element={<SmeWebsiteStudioPage />} />
                 <Route path="generated-website" element={<GeneratedWebsitePage />} />
               </Route>
 
