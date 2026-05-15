@@ -22,6 +22,7 @@ import PsychologyIcon from '@mui/icons-material/Psychology';
 import CloudQueueIcon from '@mui/icons-material/CloudQueue';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { AssistantFormattedText } from '../utils/assistantTextFormat';
 
 const SPRING_BACKEND_BASE_URL = process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
 const GROQ_ENGINE_URL = process.env.REACT_APP_GROQ_ENGINE_URL || 'http://127.0.0.1:5000/ai';
@@ -487,7 +488,7 @@ export default function AIChatPage() {
                           maxWidth: '85%',
                           px: 2.2,
                           py: 1.5,
-                          whiteSpace: 'pre-line', // Maintains line breaks from API
+                          whiteSpace: isUser ? 'pre-line' : 'normal',
                           borderRadius: isUser ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
                           background: isUser
                             ? 'linear-gradient(135deg, #22C55E, #16A34A)'
@@ -501,15 +502,22 @@ export default function AIChatPage() {
                               : '1px solid rgba(34,197,94,0.15)',
                         }}
                       >
-                        <Typography
-                          sx={{
-                            color: isUser ? '#FFFFFF' : theme.palette.text.primary,
-                            lineHeight: 1.6,
-                            fontSize: '0.92rem',
-                          }}
-                        >
-                          {message.text}
-                        </Typography>
+                        {isUser ? (
+                          <Typography
+                            sx={{
+                              color: '#FFFFFF',
+                              lineHeight: 1.6,
+                              fontSize: '0.92rem',
+                            }}
+                          >
+                            {message.text}
+                          </Typography>
+                        ) : (
+                          <AssistantFormattedText
+                            text={message.text}
+                            theme={theme}
+                          />
+                        )}
                       </Box>
                     </Box>
                   );

@@ -15,6 +15,7 @@ import {
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SendIcon from '@mui/icons-material/Send';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { AssistantFormattedText } from '../utils/assistantTextFormat';
 
 const initialMessages = [
   {
@@ -178,7 +179,7 @@ export default function AIChatPageHavindu() {
                           maxWidth: '85%',
                           px: 2.2,
                           py: 1.5,
-                          whiteSpace: 'pre-line', // Maintains line breaks from API
+                          whiteSpace: isUser ? 'pre-line' : 'normal',
                           borderRadius: isUser ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
                           background: isUser
                             ? 'linear-gradient(135deg, #22C55E, #16A34A)'
@@ -192,15 +193,22 @@ export default function AIChatPageHavindu() {
                               : '1px solid rgba(34,197,94,0.15)',
                         }}
                       >
-                        <Typography
-                          sx={{
-                            color: isUser ? '#FFFFFF' : theme.palette.text.primary,
-                            lineHeight: 1.6,
-                            fontSize: '0.92rem',
-                          }}
-                        >
-                          {message.text}
-                        </Typography>
+                        {isUser ? (
+                          <Typography
+                            sx={{
+                              color: '#FFFFFF',
+                              lineHeight: 1.6,
+                              fontSize: '0.92rem',
+                            }}
+                          >
+                            {message.text}
+                          </Typography>
+                        ) : (
+                          <AssistantFormattedText
+                            text={message.text}
+                            theme={theme}
+                          />
+                        )}
                       </Box>
                     </Box>
                   );
