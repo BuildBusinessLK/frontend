@@ -73,7 +73,7 @@ export async function apiLogin(body) {
  * @param {string} token
  */
 export async function apiFetchMe(token) {
-  const res = await fetch(`${SPRING_BASE}/api/users/me`, {
+  const res = await fetch(`${SPRING_BASE}/api/auth/me`, {
     headers: { ...authHeaders(token) },
   });
   const data = await res.json().catch(() => ({}));
@@ -88,14 +88,14 @@ export async function apiFetchMe(token) {
  * @param {Record<string, string | undefined>} patch
  */
 export async function apiPatchProfile(token, patch) {
-  const res = await fetch(`${SPRING_BASE}/api/users/me`, {
+  const res = await fetch(`${SPRING_BASE}/api/users/me/profile`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...authHeaders(token) },
     body: JSON.stringify(patch),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.error || 'Could not save profile');
+    throw new Error(data.error || data.message || 'Could not save profile');
   }
   return data;
 }

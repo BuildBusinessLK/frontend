@@ -22,10 +22,9 @@ export default function ProfileDialog({ open, onClose }) {
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [businessName, setBusinessName] = useState('');
-  const [industry, setIndustry] = useState('');
   const [district, setDistrict] = useState('');
-  const [aiNotes, setAiNotes] = useState('');
+  const [experienceLevel, setExperienceLevel] = useState('');
+  const [preferredLanguage, setPreferredLanguage] = useState('');
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
 
@@ -33,10 +32,9 @@ export default function ProfileDialog({ open, onClose }) {
     if (!open || !user) return;
     setFullName(user.fullName || '');
     setPhone(user.phone || '');
-    setBusinessName(user.businessName || '');
-    setIndustry(user.industry || '');
     setDistrict(user.district || '');
-    setAiNotes(user.aiNotes || '');
+    setExperienceLevel(user.experienceLevel || '');
+    setPreferredLanguage(user.preferredLanguage || '');
     setErr('');
   }, [open, user]);
 
@@ -47,10 +45,9 @@ export default function ProfileDialog({ open, onClose }) {
       const updated = await apiPatchProfile(token, {
         fullName: fullName.trim() || undefined,
         phone: phone.trim() || undefined,
-        businessName: businessName.trim() || undefined,
-        industry: industry.trim() || undefined,
         district: district.trim() || undefined,
-        aiNotes: aiNotes.trim() || undefined,
+        experienceLevel: experienceLevel.trim() || undefined,
+        preferredLanguage: preferredLanguage.trim() || undefined,
       });
       setUser(updated);
       onClose();
@@ -69,7 +66,12 @@ export default function ProfileDialog({ open, onClose }) {
           Used to personalize the AI assistant — add more detail anytime.
         </Typography>
         {user?.role && (
-          <Chip size="small" label={String(user.role).toUpperCase()} sx={{ mt: 1, fontWeight: 700 }} color={user.role === 'ADMIN' ? 'warning' : 'default'} />
+          <Chip
+            size="small"
+            label={String(user.role).toUpperCase()}
+            sx={{ mt: 1, fontWeight: 700 }}
+            color={user.role === 'ADMIN' ? 'warning' : 'default'}
+          />
         )}
       </DialogTitle>
       <DialogContent>
@@ -77,22 +79,20 @@ export default function ProfileDialog({ open, onClose }) {
           <TextField label="Email" value={user?.email || ''} fullWidth disabled />
           <TextField label="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} fullWidth required />
           <TextField label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} fullWidth />
-          <TextField
-            label="Business / farm name"
-            value={businessName}
-            onChange={(e) => setBusinessName(e.target.value)}
-            fullWidth
-          />
-          <TextField label="Primary industry" value={industry} onChange={(e) => setIndustry(e.target.value)} fullWidth placeholder="Coconut, Kithul…" />
           <TextField label="District" value={district} onChange={(e) => setDistrict(e.target.value)} fullWidth />
           <TextField
-            label="Notes for AI (goals, products, constraints)"
-            value={aiNotes}
-            onChange={(e) => setAiNotes(e.target.value)}
+            label="Experience level"
+            value={experienceLevel}
+            onChange={(e) => setExperienceLevel(e.target.value)}
             fullWidth
-            multiline
-            minRows={3}
-            placeholder="Short context the assistant should remember — e.g. bulk copra, retail jaggery, export trials…"
+            placeholder="e.g. New entrepreneur, 5+ years"
+          />
+          <TextField
+            label="Preferred language"
+            value={preferredLanguage}
+            onChange={(e) => setPreferredLanguage(e.target.value)}
+            fullWidth
+            placeholder="en / si / ta"
           />
           {err && (
             <Typography variant="body2" color="error" fontWeight={600}>

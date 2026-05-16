@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -6,6 +6,7 @@ import {
   CardContent,
   Container,
   Stack,
+  TextField,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -14,7 +15,10 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { ROUTES } from '../constants/routes';
+import { useAuth } from '../contexts/AuthContext';
 import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
+import { fetchBusinesses } from '../services/businessApi';
+import { fetchLatestWebsite, generateWebsite, publishWebsite } from '../services/websiteApi';
 
 const websiteFeatures = [
   {
@@ -38,8 +42,48 @@ const websiteFeatures = [
 export default function WebsiteMarketingPage() {
   const theme = useTheme();
   const { mode } = useThemeMode();
+  const { token } = useAuth();
   const navigate = useNavigate();
   const pagePt = useMarketingPageTopPadding();
+  const [businessId, setBusinessId] = useState(null);
+  const [slug, setSlug] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('#15803d');
+  const [secondaryColor, setSecondaryColor] = useState('#ca8a04');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [coverImageUrl, setCoverImageUrl] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [website, setWebsite] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    let c = false;
+    (async () => {
+      try {
+        const list = await fetchBusinesses(token);
+        if (c || !list.length) return;
+        const b = list[0];
+        setBusinessId(b.id);
+        setSlug(b.websiteSlug || '');
+        const w = await fetchLatestWebsite(token, b.id);
+        if (!c && w) {
+          setWebsite(w);
+          setPrimaryColor(w.primaryColor || '#15803d');
+          setSecondaryColor(w.secondaryColor || '#ca8a04');
+          setLogoUrl(w.logoUrl || '');
+          setCoverImageUrl(w.coverImageUrl || '');
+          setContactEmail(w.contactEmail || '');
+          setPhone(w.phone || '');
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      c = true;
+    };
+  }, [token]);
 
   return (
     <Box
@@ -160,25 +204,102 @@ export default function WebsiteMarketingPage() {
               Ready to create your website?
             </Typography>
             <Typography sx={{ color: theme.palette.text.secondary, mb: 3, maxWidth: 600, mx: 'auto' }}>
-              Let our AI assistant generate landing pages, conversion copy, and lead capture flows tailored to your business.
+              Use one template for now: AI fills hero, about, and marketing copy from your business profile. Publish opens the
+              Next.js public site at <strong>/business/{slug || 'your-slug'}</strong>.
             </Typography>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => navigate(ROUTES.marketing.websiteTemplates)}
-              sx={{
-                borderRadius: 999,
-                px: 4,
-                py: 1.5,
-                background: 'linear-gradient(135deg, #22C55E, #16A34A)',
-                boxShadow: '0 14px 30px rgba(34,197,94,0.3)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #16A34A, #15803D)',
-                },
-              }}
-            >
-              Start Creating
-            </Button>
+            {!businessId && (
+              <Typography color="error" sx={{ mb: 2 }}>
+                Create your business profile first.
+              </Typography>
+            )}
+            <Stack spacing={2} sx={{ maxWidth: 480, mx: 'auto', textAlign: 'left', mb: 2 }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <TextField label="Primary color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} fullWidth size="small" />
+                <TextField label="Secondary color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} fullWidth size="small" />
+              </Stack>
+              <TextField label="Logo URL" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} fullWidth size="small" />
+              <TextField label="Cover image URL" value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} fullWidth size="small" />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <TextField label="Contact email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} fullWidth size="small" />
+                <TextField label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} fullWidth size="small" />
+              </Stack>
+            </Stack>
+            {msg && (
+              <Typography variant="body2" sx={{ mb: 2, color: 'success.main' }}>
+                {msg}
+              </Typography>
+            )}
+            {website?.publishedUrl && (
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                Published:{' '}
+                <a href={website.publishedUrl} target="_blank" rel="noreferrer">
+                  {website.publishedUrl}
+                </a>
+              </Typography>
+            )}
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" alignItems="center">
+              <Button
+                variant="contained"
+                size="large"
+                disabled={!businessId || busy}
+                onClick={async () => {
+                  setMsg('');
+                  setBusy(true);
+                  try {
+                    const w = await generateWebsite(token, {
+                      businessId,
+                      templateId: 'modern-business-v1',
+                      primaryColor,
+                      secondaryColor,
+                      logoUrl: logoUrl || undefined,
+                      coverImageUrl: coverImageUrl || undefined,
+                      contactEmail: contactEmail || undefined,
+                      phone: phone || undefined,
+                    });
+                    setWebsite(w);
+                    setMsg('Draft generated. Preview on the template site after publish.');
+                  } catch (e) {
+                    // eslint-disable-next-line no-alert
+                    window.alert(e.message || 'Failed');
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+                sx={{
+                  borderRadius: 999,
+                  px: 4,
+                  py: 1.5,
+                  background: 'linear-gradient(135deg, #22C55E, #16A34A)',
+                  boxShadow: '0 14px 30px rgba(34,197,94,0.3)',
+                }}
+              >
+                {busy ? 'Working…' : 'Generate website'}
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                disabled={!website?.id || busy}
+                onClick={async () => {
+                  setBusy(true);
+                  try {
+                    const w = await publishWebsite(token, website.id);
+                    setWebsite(w);
+                    setMsg('Published.');
+                  } catch (e) {
+                    // eslint-disable-next-line no-alert
+                    window.alert(e.message || 'Publish failed');
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+                sx={{ borderRadius: 999, px: 4, py: 1.5 }}
+              >
+                Publish
+              </Button>
+              <Button size="large" onClick={() => navigate(ROUTES.marketing.root)} sx={{ borderRadius: 999 }}>
+                Back
+              </Button>
+            </Stack>
           </Box>
         </Stack>
       </Container>

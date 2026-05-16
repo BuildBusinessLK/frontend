@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
 import CampaignRoundedIcon from '@mui/icons-material/CampaignRounded';
-import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
+import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,26 +22,26 @@ import { alpha, getThemeColors, gradients, shadows, brand } from '../theme';
 
 const cards = [
   {
-    title: 'AI agent',
-    body: 'Chat with Llama-powered knowledge routed through POST /ask (Spring ⇄ Python pipeline).',
+    title: 'AI assistant',
+    body: 'Chat with industry-grounded RAG plus your business context.',
     to: ROUTES.dashboardAi,
     icon: <SmartToyRoundedIcon />,
     accent: gradients.green,
     shadow: shadows.colored.green,
   },
   {
-    title: 'Marketing studio',
-    body: 'Generate posts & ads, plan social captions, draft email arcs without leaving the SME workspace.',
+    title: 'Marketing',
+    body: 'Website generation, social, and email placeholders.',
     to: ROUTES.marketing.root,
     icon: <CampaignRoundedIcon />,
     accent: gradients.primary,
     shadow: shadows.colored.amber,
   },
   {
-    title: 'Analytics cockpit',
-    body: 'Growth signals placeholders until live feedback + performance hooks land in phases five-six.',
-    to: ROUTES.dashboardAnalytics,
-    icon: <InsightsRoundedIcon />,
+    title: 'Business profile',
+    body: 'Products, social links, and sector for AI + public site.',
+    to: ROUTES.businessProfile,
+    icon: <PersonRoundedIcon />,
     accent: gradients.blue,
     shadow: shadows.light.md,
   },

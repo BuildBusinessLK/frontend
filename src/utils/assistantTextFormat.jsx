@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 /**
  * Renders assistant replies with readable structure: paragraphs, numbered lists,
@@ -109,9 +110,12 @@ function stripLeadingHeadingMarkers(line) {
  * @param {object} props
  * @param {string} props.text
  * @param {boolean} [props.isUser]
- * @param {import('@mui/material').Theme} props.theme
+ * @param {import('@mui/material').Theme} [props.theme] — optional override; defaults to useTheme()
  */
-export function AssistantFormattedText({ text, isUser = false, theme }) {
+export function AssistantFormattedText({ text, isUser = false, theme: themeProp }) {
+  const themeFromContext = useTheme();
+  const theme = themeProp ?? themeFromContext;
+
   const body = normalizeAssistantText(text);
   if (!body) {
     return null;

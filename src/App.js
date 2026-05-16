@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import MainLayout from './layouts/MainLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import HomePage from './pages/HomePage';
 import SubscriptionsPage from './pages/SubscriptionsPage';
 import AboutPage from './pages/AboutPage';
@@ -16,23 +17,22 @@ import SignUpPage from './pages/SignUpPage';
 import AIChatPage from './pages/AIChatPage';
 import MarketingPage from './pages/MarketingPage';
 import WebsiteMarketingPage from './pages/WebsiteMarketingPage';
-import TemplateSelectionPage from './pages/TemplateSelectionPage';
-import GeneratedWebsitePage from './pages/GeneratedWebsitePage';
 import SocialPage from './pages/SocialPage';
 import EmailPage from './pages/EmailPage';
-import NetlifyCallback from './pages/NetlifyCallback';
-import ShopSetupPage from './pages/ShopSetupPage';
-import AdGeneratorPage from './pages/AdGeneratorPage';
 import DashboardHomePage from './pages/DashboardHomePage';
-import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
-import Marketing2HubPage from './pages/Marketing2HubPage';
-import SmeWebsiteStudioPage from './pages/SmeWebsiteStudioPage';
+import BusinessProfilePage from './pages/BusinessProfilePage';
+import SettingsPage from './pages/SettingsPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 import HostedSmeBusinessPage from './pages/HostedSmeBusinessPage';
 
 function LegacyMarketingRedirect() {
   const { pathname } = useLocation();
   const tail = pathname.replace(/^\/marketing/, '');
   return <Navigate to={`/dashboard/marketing${tail}`} replace />;
+}
+
+function LegacyAiAgentRedirect() {
+  return <Navigate to="/dashboard/ai-assistant" replace />;
 }
 
 export default function App() {
@@ -43,7 +43,6 @@ export default function App() {
           <CssBaseline />
           <Router>
             <Routes>
-              <Route path="/netlify-callback" element={<NetlifyCallback />} />
               <Route path="/business/:slug" element={<HostedSmeBusinessPage />} />
 
               <Route
@@ -55,25 +54,26 @@ export default function App() {
                 }
               >
                 <Route index element={<DashboardHomePage />} />
-                <Route path="ai-agent" element={<AIChatPage />} />
-                <Route path="analytics" element={<AnalyticsDashboardPage />} />
+                <Route path="ai-assistant" element={<AIChatPage />} />
+                <Route path="business-profile" element={<BusinessProfilePage />} />
                 <Route path="marketing" element={<MarketingPage />} />
                 <Route path="marketing/website" element={<WebsiteMarketingPage />} />
-                <Route path="marketing/website/templates" element={<TemplateSelectionPage />} />
                 <Route path="marketing/social" element={<SocialPage />} />
                 <Route path="marketing/email" element={<EmailPage />} />
-                <Route path="marketing/ad-generator/setup" element={<ShopSetupPage />} />
-                <Route path="marketing/ad-generator" element={<AdGeneratorPage />} />
-                <Route path="marketing-2" element={<Marketing2HubPage />} />
-                <Route path="marketing-2/studio" element={<SmeWebsiteStudioPage />} />
-                <Route path="generated-website" element={<GeneratedWebsitePage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route
+                  path="admin"
+                  element={
+                    <AdminRoute>
+                      <AdminDashboardPage />
+                    </AdminRoute>
+                  }
+                />
+                <Route path="ai-agent" element={<LegacyAiAgentRedirect />} />
+                <Route path="marketing-2/*" element={<Navigate to="/dashboard/marketing/website" replace />} />
               </Route>
 
-              <Route
-                path="/ai-chat"
-                element={<Navigate to="/dashboard/ai-agent" replace />}
-              />
-              <Route path="/ai-chat-havindu" element={<Navigate to="/dashboard/ai-agent" replace />} />
+              <Route path="/ai-chat" element={<LegacyAiAgentRedirect />} />
               <Route path="/marketing/*" element={<LegacyMarketingRedirect />} />
 
               <Route path="/" element={<MainLayout />}>

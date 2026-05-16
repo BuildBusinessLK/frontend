@@ -16,7 +16,6 @@ import LanguageIcon from '@mui/icons-material/Language';
 import ShareIcon from '@mui/icons-material/Share';
 import EmailIcon from '@mui/icons-material/Email';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import CampaignIcon from '@mui/icons-material/Campaign';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { ROUTES } from '../constants/routes';
 import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
@@ -24,7 +23,6 @@ import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 const routes = {
   website: ROUTES.marketing.website,
   social: ROUTES.marketing.social,
-  ads: ROUTES.marketing.adSetup,
   email: ROUTES.marketing.email,
 };
 
@@ -44,14 +42,6 @@ const marketingCards = [
     icon: <ShareIcon fontSize="inherit" />,
     accent: 'linear-gradient(135deg, #F59E0B, #F97316)',
     stats: ['Post calendar', 'Short video', 'Audience growth'],
-  },
-  {
-    id: 'ads',
-    title: 'Ad Generator',
-    description: 'Write ad copy from a prompt or your saved shop details, then preview a polished campaign visual.',
-    icon: <CampaignIcon fontSize="inherit" />,
-    accent: 'linear-gradient(135deg, #2563EB, #1D4ED8)',
-    stats: ['Prompt mode', 'Shop details', 'JPG preview'],
   },
   {
     id: 'email',

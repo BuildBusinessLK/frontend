@@ -22,8 +22,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
 import CampaignRoundedIcon from '@mui/icons-material/CampaignRounded';
-import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
-import PostAddRoundedIcon from '@mui/icons-material/PostAddRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import EmailRoundedIcon from '@mui/icons-material/EmailRounded';
 import ExpandLess from '@mui/icons-material/ExpandLess';
@@ -33,8 +31,10 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import LanguageIcon from '@mui/icons-material/Language';
 import HubRoundedIcon from '@mui/icons-material/HubRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
-import RocketLaunchRoundedIcon from '@mui/icons-material/RocketLaunchRounded';
 import WebAssetRoundedIcon from '@mui/icons-material/WebAssetRounded';
+import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
+import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
+import AdminPanelSettingsRoundedIcon from '@mui/icons-material/AdminPanelSettings';
 import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -92,20 +92,11 @@ export default function DashboardLayout() {
   const [marketingOpen, setMarketingOpen] = useState(() =>
     location.pathname.startsWith(ROUTES.marketing.root),
   );
-  const [marketing2Open, setMarketing2Open] = useState(() =>
-    location.pathname.startsWith(ROUTES.marketing2.root),
-  );
   const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     if (location.pathname.startsWith(ROUTES.marketing.root)) {
       setMarketingOpen(true);
-    }
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (location.pathname.startsWith(ROUTES.marketing2.root)) {
-      setMarketing2Open(true);
     }
   }, [location.pathname]);
 
@@ -165,11 +156,20 @@ export default function DashboardLayout() {
         />
         <NavTile
           icon={<SmartToyRoundedIcon />}
-          primary="AI agent"
-          secondary="Llama · /ask assistant"
+          primary="AI assistant"
+          secondary="RAG + business context"
           selected={path === ROUTES.dashboardAi}
           dense
           to={ROUTES.dashboardAi}
+          onClick={handleNav}
+        />
+        <NavTile
+          icon={<PersonRoundedIcon />}
+          primary="Business profile"
+          secondary="Products & social"
+          selected={path === ROUTES.businessProfile}
+          dense
+          to={ROUTES.businessProfile}
           onClick={handleNav}
         />
 
@@ -194,7 +194,7 @@ export default function DashboardLayout() {
           </ListItemIcon>
           <ListItemText
             primary="Marketing"
-            secondary="Posts · social · email"
+            secondary="Website · social · email"
             primaryTypographyProps={{ fontWeight: 650, fontSize: '0.925rem' }}
             secondaryTypographyProps={{ variant: 'caption', sx: { opacity: 0.65 } }}
           />
@@ -205,18 +205,18 @@ export default function DashboardLayout() {
           <List component="div" disablePadding sx={{ pl: 1, pr: 0.5 }}>
             <NavTile
               icon={<HubRoundedIcon sx={{ fontSize: 22 }} />}
-              primary="Hub"
+              primary="Overview"
               dense
               selected={path === ROUTES.marketing.root}
               to={ROUTES.marketing.root}
               onClick={handleNav}
             />
             <NavTile
-              icon={<PostAddRoundedIcon sx={{ fontSize: 22 }} />}
-              primary="Post generation"
+              icon={<WebAssetRoundedIcon sx={{ fontSize: 22 }} />}
+              primary="Website"
               dense
-              selected={path.includes('/marketing/ad-generator')}
-              to={ROUTES.marketing.adGenerator}
+              selected={path === ROUTES.marketing.website}
+              to={ROUTES.marketing.website}
               onClick={handleNav}
             />
             <NavTile
@@ -238,56 +238,26 @@ export default function DashboardLayout() {
           </List>
         </Collapse>
 
-        {/* Marketing 2 — SME website studio */}
-        <ListItemButton
-          onClick={() => setMarketing2Open((o) => !o)}
-          sx={{
-            borderRadius: 2,
-            mb: 0.25,
-            py: 1.1,
-            pl: 2,
-            bgcolor:
-              path.startsWith(ROUTES.marketing2.root) && path !== ROUTES.marketing2.root
-                ? mode === 'dark'
-                  ? 'rgba(245,158,11,0.07)'
-                  : 'rgba(245,158,11,0.07)'
-                : 'transparent',
-          }}
-        >
-          <ListItemIcon sx={{ minWidth: 40 }}>
-            <RocketLaunchRoundedIcon />
-          </ListItemIcon>
-          <ListItemText
-            primary="Marketing 2"
-            secondary="SME website builder"
-            primaryTypographyProps={{ fontWeight: 650, fontSize: '0.925rem' }}
-            secondaryTypographyProps={{ variant: 'caption', sx: { opacity: 0.65 } }}
-          />
-          {marketing2Open ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
-
-        <Collapse in={marketing2Open} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding sx={{ pl: 1, pr: 0.5 }}>
-            <NavTile
-              icon={<WebAssetRoundedIcon sx={{ fontSize: 22 }} />}
-              primary="Create your personalized website"
-              dense
-              selected={path.startsWith(ROUTES.marketing2.root)}
-              to={ROUTES.marketing2.studio}
-              onClick={handleNav}
-            />
-          </List>
-        </Collapse>
-
         <NavTile
-          icon={<InsightsRoundedIcon />}
-          primary="Analytics"
-          secondary="Growth & performance signals"
-          selected={path === ROUTES.dashboardAnalytics}
+          icon={<SettingsRoundedIcon />}
+          primary="Settings"
+          secondary="Account & preferences"
+          selected={path === ROUTES.settings}
           dense
-          to={ROUTES.dashboardAnalytics}
+          to={ROUTES.settings}
           onClick={handleNav}
         />
+        {user?.role === 'ADMIN' && (
+          <NavTile
+            icon={<AdminPanelSettingsRoundedIcon />}
+            primary="Admin"
+            secondary="Platform stats"
+            selected={path === ROUTES.admin}
+            dense
+            to={ROUTES.admin}
+            onClick={handleNav}
+          />
+        )}
       </List>
 
       <Divider sx={{ borderColor: colors.border.secondary, mx: 1, mb: 1 }} />
