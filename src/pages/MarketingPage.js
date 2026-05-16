@@ -30,10 +30,10 @@ const marketingCards = [
   {
     id: 'website',
     title: 'Website',
-    description: 'Create a clean landing page, product story, and contact flow that converts visitors.',
+    description: 'Generate a professional website using AI. Customise branding, publish instantly, and get a shareable URL.',
     icon: <LanguageIcon fontSize="inherit" />,
     accent: 'linear-gradient(135deg, #22C55E, #16A34A)',
-    stats: ['Landing pages', 'Conversion copy', 'Lead capture'],
+    stats: ['AI copywriting', 'Brand colours', 'Publish & share'],
   },
   {
     id: 'social',

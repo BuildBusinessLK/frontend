@@ -23,7 +23,7 @@ import { alpha, getThemeColors, gradients, shadows, brand } from '../theme';
 const cards = [
   {
     title: 'AI assistant',
-    body: 'Chat with industry-grounded RAG plus your business context.',
+    body: 'Chat with our industry-grounded AI. Get advice on coconut, kithul, and palmyrah businesses tailored to your profile.',
     to: ROUTES.dashboardAi,
     icon: <SmartToyRoundedIcon />,
     accent: gradients.green,
@@ -31,7 +31,7 @@ const cards = [
   },
   {
     title: 'Marketing',
-    body: 'Website generation, social, and email placeholders.',
+    body: 'Generate your business website with AI, social media content, and email campaigns.',
     to: ROUTES.marketing.root,
     icon: <CampaignRoundedIcon />,
     accent: gradients.primary,
@@ -39,7 +39,7 @@ const cards = [
   },
   {
     title: 'Business profile',
-    body: 'Products, social links, and sector for AI + public site.',
+    body: 'Manage your business details, product catalogue, and social links. AI uses this data to personalise responses.',
     to: ROUTES.businessProfile,
     icon: <PersonRoundedIcon />,
     accent: gradients.blue,
