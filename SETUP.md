@@ -154,6 +154,83 @@ The backend will be available at: **http://localhost:8083**
 
 ---
 
+### 🗄️ Database Setup (required before running the backend)
+
+The backend uses **MySQL**. Every team member runs their **own local database** for development. There is also a shared deployed database for production.
+
+#### Understanding the 3 properties files
+
+All 3 files are inside:
+```
+BuildBusinessLK/backend/backend/src/main/resources/
+```
+
+| File | Purpose |
+|---|---|
+| `application.properties` | Main config — sets which profile (dev/prod) is active |
+| `application-dev.properties` | **Your** local database credentials — edit this |
+| `application-prod.properties` | Shared deployed database — get from Havindu, do not edit |
+
+#### How profiles work
+
+Open `application.properties`. You will see this line at the top:
+
+```properties
+spring.profiles.active=dev
+```
+
+This tells Spring Boot to use `application-dev.properties` on top of the main file.
+- `dev` → uses **your local MySQL** database
+- `prod` → uses the **shared deployed** database
+
+> ⚠️ **Always keep this set to `dev` while developing.** Only Havindu changes this to `prod`.
+
+#### Step 1 — Install MySQL
+
+If you don't have MySQL installed:
+- Download **MySQL Community Server** from https://dev.mysql.com/downloads/mysql/
+- During install, set a root password you will remember
+- MySQL will run on port **3306** by default
+
+#### Step 2 — Set up your local database credentials
+
+Open `application-dev.properties`. It looks like this:
+
+```properties
+# Local MySQL — active when spring.profiles.active=dev
+spring.datasource.url=jdbc:mysql://localhost:3306/buildbusinesslk?createDatabaseIfNotExist=true
+spring.datasource.username=root
+spring.datasource.password=YOUR_MYSQL_PASSWORD
+```
+
+**What to do:**
+1. Replace `YOUR_MYSQL_PASSWORD` with the password you set when installing MySQL
+2. If the file already has someone else's credentials — **delete those lines** and put in yours
+3. The database name (`buildbusinesslk`) will be **created automatically** the first time the backend runs — you don't need to create it manually
+4. Save the file
+
+> ⚠️ `createDatabaseIfNotExist=true` means Spring Boot creates the database for you. No need to open MySQL Workbench manually.
+
+#### Step 3 — Verify the active profile
+
+Make sure `application.properties` still has:
+
+```properties
+spring.profiles.active=dev
+```
+
+That's it. Now start the backend — it will connect to your local MySQL.
+
+#### ⚠️ Do NOT push properties files to GitHub
+
+These files contain your personal database password. They are already listed in `.gitignore`.
+
+- ✅ Stage and push your code files normally
+- ❌ Never add `application-dev.properties` or `application-prod.properties` to a commit
+- ✅ Commit backend changes **through IntelliJ** — it shows you exactly which files are staged, making it easy to avoid accidentally committing these files
+
+---
+
 ### 🤖 AI Service (Python + Ollama)
 
 The AI service needs **two things running** at the same time — in two separate terminals.
@@ -343,9 +420,9 @@ __pycache__/
 .env.local
 .env.production
 
-# Spring Boot secrets
-application.properties
+# Spring Boot — your personal DB credentials (never push these)
 application-dev.properties
+application-prod.properties
 
 # Build output (auto-generated, not source code)
 build/
@@ -359,18 +436,19 @@ target/
 *.iml
 ```
 
-> If you accidentally track a file that should be ignored, tell Havindu and we'll fix it together.
+> `application.properties` itself **is safe to commit** — it only contains non-secret shared config like port numbers and JPA settings. The files with your personal DB password (`application-dev.properties` and `application-prod.properties`) are what you must never push.
 
 ---
 
 ## ⚠️ Important rules
 
-1. **Never push `.env` or `application.properties` to GitHub.** These contain API keys.
-2. **Never push directly to `main`.** Always use your `dev-yourname` branch.
-3. **Pull before you push.** Always `git pull` before starting work each day.
-4. **Commit through your IDE** (IntelliJ for backend) when possible — it's easier to review what you're committing.
-5. **Ask before merging** into `development`. Always get Havindu's approval first.
-6. **Do not push `node_modules/`** — this folder can be hundreds of megabytes. It's in `.gitignore` already.
+1. **Never push `application-dev.properties` or `application-prod.properties` to GitHub.** These contain your DB password.
+2. **Never push `.env` files.** These contain API keys and secrets.
+3. **Never push directly to `main`.** Always use your `dev-yourname` branch.
+4. **Pull before you start.** Always `git pull origin development` before starting work each day.
+5. **Commit through your IDE** (IntelliJ for backend) when possible — it shows you exactly which files are staged so you don't accidentally commit sensitive files.
+6. **Ask before merging** into `development`. Always get Havindu's approval first.
+7. **Do not push `node_modules/`** — this folder can be hundreds of megabytes. It's in `.gitignore` already.
 
 ---
 
