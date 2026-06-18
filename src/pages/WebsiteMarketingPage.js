@@ -11,8 +11,8 @@ import {
   Divider,
   Grid,
   IconButton,
-  InputAdornment,
   Link,
+  Popover,
   Skeleton,
   Stack,
   TextField,
@@ -51,32 +51,131 @@ function StatusBadge({ status }) {
 
 // ─── Colour swatch preview ────────────────────────────────────────────────────
 
+const PRESET_COLORS = [
+  '#0b7285',
+  '#16a34a',
+  '#ca8a04',
+  '#e11d48',
+  '#7c3aed',
+  '#2563eb',
+  '#f97316',
+  '#0f766e',
+  '#facc15',
+  '#f43f5e',
+  '#1e293b',
+  '#111827',
+  '#22c55e',
+  '#0ea5e9',
+  '#6366f1',
+  '#ec4899',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
+  '#14b8a6',
+  '#64748b',
+  '#334155',
+  '#f97316',
+  '#10b981',
+  '#38bdf8',
+  '#a855f7',
+  '#fb7185',
+  '#fdba74',
+  '#f87171',
+  '#60a5fa',
+  '#22d3ee',
+  '#4ade80',
+  '#f472b6',
+  '#fbbf24',
+  '#f8b4d9',
+  '#94a3b8',
+];
+
 function ColorInput({ label, value, onChange }) {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
-    <TextField
-      fullWidth
-      size="small"
-      label={label}
-      value={value}
-      onChange={onChange}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <Box
-              sx={{
-                width: 22,
-                height: 22,
-                borderRadius: 1,
-                background: value || '#ccc',
-                border: '1px solid rgba(0,0,0,0.15)',
-                flexShrink: 0,
-              }}
-            />
-          </InputAdornment>
-        ),
-      }}
-      placeholder="#15803d"
-    />
+    <>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+          {label}
+        </Typography>
+        <Button
+          variant="outlined"
+          onClick={handleOpen}
+          sx={{
+            textTransform: 'none',
+            borderRadius: 3,
+            minWidth: 170,
+            justifyContent: 'space-between',
+            px: 2,
+            py: 1,
+          }}
+        >
+          <Box
+            sx={{
+              width: 18,
+              height: 18,
+              borderRadius: '50%',
+              background: value || '#000',
+              border: '1px solid rgba(0,0,0,0.12)',
+              flexShrink: 0,
+            }}
+          />
+          <Typography variant="body2" sx={{ color: 'text.primary' }}>
+            {value || 'Select colour'}
+          </Typography>
+        </Button>
+      </Box>
+
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        PaperProps={{ sx: { p: 1.5, minWidth: 260, borderRadius: 3 } }}
+      >
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 1.25 }}>
+          {PRESET_COLORS.map((preset) => {
+            const selected = preset.toLowerCase() === (value || '').toLowerCase();
+            return (
+              <Tooltip key={preset} title={preset} arrow>
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={() => {
+                    onChange({ target: { value: preset } });
+                    handleClose();
+                  }}
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    border: selected ? '2px solid' : '2px solid transparent',
+                    borderColor: selected ? 'primary.main' : 'transparent',
+                    background: preset,
+                    cursor: 'pointer',
+                    transition: 'transform 0.15s ease, border-color 0.15s ease',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                    },
+                  }}
+                />
+              </Tooltip>
+            );
+          })}
+        </Box>
+      </Popover>
+    </>
   );
 }
 

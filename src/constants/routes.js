@@ -7,6 +7,7 @@ export const ROUTES = {
   marketing: {
     root: MARKETING_BASE,
     website: `${MARKETING_BASE}/website`,
+    websiteTemplates: `${MARKETING_BASE}/website`,
     social: `${MARKETING_BASE}/social`,
     email: `${MARKETING_BASE}/email`,
   },
