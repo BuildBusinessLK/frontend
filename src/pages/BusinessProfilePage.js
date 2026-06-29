@@ -36,8 +36,13 @@ export default function BusinessProfilePage() {
   const [monthlyIncome, setMonthlyIncome] = useState('');
   const [monthlyProduction, setMonthlyProduction] = useState('');
   const [marketingGoals, setMarketingGoals] = useState('');
+  const [businessHoursOpen, setBusinessHoursOpen] = useState('');
+  const [businessHoursClose, setBusinessHoursClose] = useState('');
+  const [workingDays, setWorkingDays] = useState('');
+  const [googleMapsUrl, setGoogleMapsUrl] = useState('');
   const [products, setProducts] = useState([emptyProduct()]);
   const [socialLinks, setSocialLinks] = useState([emptySocial()]);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +62,12 @@ export default function BusinessProfilePage() {
           setMonthlyIncome(b.monthlyIncome != null ? String(b.monthlyIncome) : '');
           setMonthlyProduction(b.monthlyProduction != null ? String(b.monthlyProduction) : '');
           setMarketingGoals(b.marketingGoals || '');
+          setBusinessHoursOpen(b.businessHoursOpen || '');
+          setBusinessHoursClose(b.businessHoursClose || '');
+          setWorkingDays(b.workingDays || '');
+          setGoogleMapsUrl(b.googleMapsUrl || '');
           if (b.products?.length) {
+
             setProducts(
               b.products.map((p) => ({
                 name: p.name || '',
@@ -97,7 +107,12 @@ export default function BusinessProfilePage() {
     monthlyIncome: monthlyIncome.trim() ? Number(monthlyIncome) : undefined,
     monthlyProduction: monthlyProduction.trim() ? Number(monthlyProduction) : undefined,
     marketingGoals: marketingGoals.trim() || undefined,
+    businessHoursOpen: businessHoursOpen.trim() || undefined,
+    businessHoursClose: businessHoursClose.trim() || undefined,
+    workingDays: workingDays.trim() || undefined,
+    googleMapsUrl: googleMapsUrl.trim() || undefined,
     products: products
+
       .filter((p) => p.name.trim())
       .map((p) => ({
         name: p.name.trim(),
@@ -195,6 +210,41 @@ export default function BusinessProfilePage() {
               multiline
               minRows={2}
             />
+
+            <Typography variant="subtitle1" fontWeight={800} sx={{ mt: 1 }}>
+              Business Operations & Location
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                label="Opening Time (e.g. 09:00)"
+                value={businessHoursOpen}
+                onChange={(e) => setBusinessHoursOpen(e.target.value)}
+                helperText="24-hour format (HH:MM)"
+                fullWidth
+              />
+              <TextField
+                label="Closing Time (e.g. 18:00)"
+                value={businessHoursClose}
+                onChange={(e) => setBusinessHoursClose(e.target.value)}
+                helperText="24-hour format (HH:MM)"
+                fullWidth
+              />
+            </Stack>
+            <TextField
+              label="Working Days (comma-separated)"
+              value={workingDays}
+              onChange={(e) => setWorkingDays(e.target.value)}
+              helperText="E.g. Monday,Tuesday,Wednesday,Thursday,Friday"
+              fullWidth
+            />
+            <TextField
+              label="Google Maps URL"
+              value={googleMapsUrl}
+              onChange={(e) => setGoogleMapsUrl(e.target.value)}
+              helperText="Link to your store's Google Maps location pin"
+              fullWidth
+            />
+
 
             <Typography variant="subtitle1" fontWeight={800} sx={{ mt: 1 }}>
               Products
