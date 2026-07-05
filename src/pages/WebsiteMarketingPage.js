@@ -52,14 +52,14 @@ function StatusBadge({ status }) {
 // ─── Colour swatch preview ────────────────────────────────────────────────────
 
 const PRESET_COLORS = [
-  '#0b7285',
+  '#0f766e',
+  '#f59e0b',
+  '#2563eb',
   '#16a34a',
   '#ca8a04',
   '#e11d48',
   '#7c3aed',
-  '#2563eb',
   '#f97316',
-  '#0f766e',
   '#facc15',
   '#f43f5e',
   '#1e293b',
@@ -210,8 +210,8 @@ export default function WebsiteMarketingPage() {
   const [loadingWebsite, setLoadingWebsite] = useState(false);
 
   // Customisation form
-  const [primaryColor, setPrimaryColor] = useState('#15803d');
-  const [secondaryColor, setSecondaryColor] = useState('#ca8a04');
+  const [primaryColor, setPrimaryColor] = useState('#0f766e');
+  const [secondaryColor, setSecondaryColor] = useState('#f59e0b');
   const [logoUrl, setLogoUrl] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [contactEmail, setContactEmail] = useState('');
@@ -239,8 +239,8 @@ export default function WebsiteMarketingPage() {
           if (!cancelled && w) {
             setWebsite(w);
             // Pre-fill form from saved website settings
-            setPrimaryColor(w.primaryColor || '#15803d');
-            setSecondaryColor(w.secondaryColor || '#ca8a04');
+            setPrimaryColor(w.primaryColor || '#0f766e');
+            setSecondaryColor(w.secondaryColor || '#f59e0b');
             setLogoUrl(w.logoUrl || '');
             setCoverImageUrl(w.coverImageUrl || '');
             setContactEmail(w.contactEmail || '');
@@ -300,10 +300,13 @@ export default function WebsiteMarketingPage() {
   // ── Copy URL ────────────────────────────────────────────────────────────────
   const handleCopy = () => {
     if (!website?.publishedUrl) return;
-    navigator.clipboard.writeText(website.publishedUrl).then(() => {
+    const copy = navigator.clipboard?.writeText
+      ? navigator.clipboard.writeText(website.publishedUrl)
+      : Promise.reject(new Error('Clipboard unavailable'));
+    copy.then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    }).catch(() => setError('Could not copy the URL. Please select and copy it manually.'));
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -354,6 +357,17 @@ export default function WebsiteMarketingPage() {
 
   const isPublished = website?.status === 'PUBLISHED';
   const hasDraft = !!website;
+  const hasProducts = (business.products || []).length > 0;
+  const hasSocialLinks = (business.socialLinks || []).length > 0;
+  const hasContact = Boolean(phone || contactEmail);
+  const publicPath = `/business/${business.websiteSlug || 'your-slug'}`;
+  const growthItems = [
+    { label: 'Business profile', ready: Boolean(business.businessName && business.sector) },
+    { label: 'Contact details', ready: hasContact },
+    { label: 'Products or services', ready: hasProducts },
+    { label: 'Social links', ready: hasSocialLinks },
+  ];
+  const readyCount = growthItems.filter((item) => item.ready).length;
 
   return (
     <Box
@@ -361,10 +375,9 @@ export default function WebsiteMarketingPage() {
         minHeight: '100vh',
         pt: pagePt,
         pb: 8,
-        background:
-          mode === 'dark'
-            ? 'radial-gradient(circle at 20% 0%, rgba(34,197,94,0.1) 0%, transparent 40%), linear-gradient(180deg,#060A0D 0%,#10151B 100%)'
-            : 'linear-gradient(180deg,#F0FDF4 0%,#f7faf8 100%)',
+        background: mode === 'dark'
+          ? 'linear-gradient(180deg,#07110f 0%,#111827 100%)'
+          : 'linear-gradient(180deg,#F8FAFC 0%,#EEF8F5 100%)',
       }}
     >
       <Container maxWidth="lg">
@@ -382,11 +395,11 @@ export default function WebsiteMarketingPage() {
             <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ sm: 'flex-end' }} justifyContent="space-between" spacing={1}>
               <Box>
                 <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: '-0.04em', mb: 0.5 }}>
-                  Your Website
+                  Website Builder
                 </Typography>
                 <Stack direction="row" alignItems="center" spacing={1.5}>
                   <Typography sx={{ color: 'text.secondary' }}>
-                    Business: <strong>{business.businessName}</strong> · {business.sector}
+                    Start simple, then add products, socials, hours, and maps later.
                   </Typography>
                   {website && <StatusBadge status={website.status} />}
                 </Stack>
@@ -394,7 +407,7 @@ export default function WebsiteMarketingPage() {
               {business.websiteSlug && (
                 <Chip
                   icon={<LinkIcon sx={{ fontSize: '0.85rem !important' }} />}
-                  label={`/business/${business.websiteSlug}`}
+                  label={publicPath}
                   size="small"
                   sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.78rem' }}
                 />
@@ -440,7 +453,7 @@ export default function WebsiteMarketingPage() {
 
                   {/* Logo & cover */}
                   <SectionLabel icon={<LinkIcon sx={{ fontSize: 15, color: 'text.secondary' }} />}>
-                    Media URLs
+                    Optional media
                   </SectionLabel>
                   <Stack spacing={1.5} sx={{ mb: 3 }}>
                     <TextField
@@ -449,6 +462,7 @@ export default function WebsiteMarketingPage() {
                       value={logoUrl}
                       onChange={(e) => setLogoUrl(e.target.value)}
                       placeholder="https://example.com/logo.png"
+                      helperText="Leave empty to use an initials mark."
                     />
                     <TextField
                       fullWidth size="small"
@@ -456,6 +470,7 @@ export default function WebsiteMarketingPage() {
                       value={coverImageUrl}
                       onChange={(e) => setCoverImageUrl(e.target.value)}
                       placeholder="https://example.com/cover.jpg"
+                      helperText="Leave empty to use the template's branded visual style."
                     />
                   </Stack>
 
@@ -485,7 +500,7 @@ export default function WebsiteMarketingPage() {
 
                   {/* AI note */}
                   <Alert severity="info" sx={{ borderRadius: 2, fontSize: '0.82rem', mb: 3 }}>
-                    AI generates the hero text, about section, and marketing copy from your business profile automatically.
+                    The template works with only your basic profile. Extra sections appear automatically when you add products, social links, hours, and map details later.
                   </Alert>
 
                   {/* Generate button */}
@@ -501,9 +516,9 @@ export default function WebsiteMarketingPage() {
                       py: 1.5,
                       fontWeight: 700,
                       fontSize: '0.95rem',
-                      background: 'linear-gradient(135deg,#22C55E,#16A34A)',
-                      boxShadow: '0 10px 24px rgba(34,197,94,0.3)',
-                      '&:hover': { background: 'linear-gradient(135deg,#16A34A,#15803D)' },
+                      background: `linear-gradient(135deg,${primaryColor || '#0f766e'},#0f766e)`,
+                      boxShadow: '0 10px 24px rgba(15,118,110,0.24)',
+                      '&:hover': { background: `linear-gradient(135deg,#0f766e,${primaryColor || '#0f766e'})` },
                     }}
                   >
                     {generating ? 'Generating…' : hasDraft ? 'Regenerate Website' : 'Generate Website'}
@@ -627,6 +642,47 @@ export default function WebsiteMarketingPage() {
                   </CardContent>
                 </Card>
 
+                <Card {...card}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ sm: 'center' }}>
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 0.5 }}>
+                          Site readiness
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          {readyCount} of {growthItems.length} content areas ready. Missing items stay hidden on the public site.
+                        </Typography>
+                      </Box>
+                      <Chip
+                        label={readyCount <= 2 ? 'Starter site' : readyCount === 3 ? 'Growing site' : 'Rich site'}
+                        color={readyCount <= 2 ? 'default' : 'success'}
+                        sx={{ fontWeight: 800, alignSelf: { xs: 'flex-start', sm: 'center' } }}
+                      />
+                    </Stack>
+                    <Grid container spacing={1.25} sx={{ mt: 2 }}>
+                      {growthItems.map((item) => (
+                        <Grid item xs={12} sm={6} key={item.label}>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                            sx={{
+                              p: 1.25,
+                              borderRadius: 2,
+                              border: '1px solid',
+                              borderColor: item.ready ? 'success.light' : 'divider',
+                              bgcolor: item.ready ? 'success.main' + '10' : 'transparent',
+                            }}
+                          >
+                            <CheckCircleIcon sx={{ fontSize: 18, color: item.ready ? 'success.main' : 'text.disabled' }} />
+                            <Typography variant="body2" sx={{ fontWeight: 700 }}>{item.label}</Typography>
+                          </Stack>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </CardContent>
+                </Card>
+
                 {/* Publish section */}
                 {hasDraft && (
                   <Card
@@ -726,7 +782,7 @@ export default function WebsiteMarketingPage() {
                               color: 'text.secondary',
                             }}
                           >
-                            {`[platform-url]/business/${business.websiteSlug || 'your-slug'}`}
+                            {`[platform-url]${publicPath}`}
                           </Box>
                           <Button
                             variant="contained"
@@ -738,9 +794,9 @@ export default function WebsiteMarketingPage() {
                               borderRadius: 3,
                               py: 1.5,
                               fontWeight: 700,
-                              background: 'linear-gradient(135deg,#3B82F6,#1D4ED8)',
-                              boxShadow: '0 10px 24px rgba(59,130,246,0.3)',
-                              '&:hover': { background: 'linear-gradient(135deg,#2563EB,#1E40AF)' },
+                              background: 'linear-gradient(135deg,#0F766E,#0D9488)',
+                              boxShadow: '0 10px 24px rgba(15,118,110,0.28)',
+                              '&:hover': { background: 'linear-gradient(135deg,#0D9488,#0F766E)' },
                             }}
                           >
                             {publishing ? 'Publishing…' : 'Publish Website'}
@@ -759,11 +815,11 @@ export default function WebsiteMarketingPage() {
                     </Typography>
                     <Stack spacing={1.5}>
                       {[
-                        ['1', 'Customise colours and contact details in the form.'],
-                        ['2', 'Click Generate — AI reads your business profile and writes the website copy.'],
-                        ['3', 'Review the hero, about, and marketing sections. Regenerate if needed.'],
-                        ['4', 'Click Publish — your site goes live instantly on our platform.'],
-                        ['5', 'Share the URL with customers, add it to social media, and print it on packaging.'],
+                        ['1', 'Generate with only your business profile and contact details.'],
+                        ['2', 'Publish the starter site when the copy feels right.'],
+                        ['3', 'Add products, social links, hours, and map details later from your business profile.'],
+                        ['4', 'Regenerate and re-publish whenever the business changes.'],
+                        ['5', 'Share the URL with customers, social pages, and packaging.'],
                       ].map(([num, text]) => (
                         <Stack key={num} direction="row" spacing={1.5} alignItems="flex-start">
                           <Box
@@ -771,7 +827,7 @@ export default function WebsiteMarketingPage() {
                               width: 22,
                               height: 22,
                               borderRadius: '50%',
-                              background: 'linear-gradient(135deg,#22C55E,#16A34A)',
+                              background: 'linear-gradient(135deg,#0F766E,#0D9488)',
                               color: '#fff',
                               fontSize: '0.72rem',
                               fontWeight: 800,
