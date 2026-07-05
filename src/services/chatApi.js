@@ -52,3 +52,15 @@ export async function sendChatMessage(token, { sessionId, question }) {
   if (!res.ok) throw new Error(data.message || data.error || 'Chat failed');
   return data;
 }
+
+export async function getBusinessRecommendation(token, userProfile, businessProfile) {
+  const AI_SERVICE_BASE = process.env.REACT_APP_AI_SERVICE_BASE_URL || 'http://localhost:8000';
+  const res = await fetch(`${AI_SERVICE_BASE}/business-advisor`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userProfile, businessProfile }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Failed to generate recommendation');
+  return data;
+}

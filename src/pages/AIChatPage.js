@@ -35,7 +35,10 @@ import {
   fetchChatMessages,
   fetchChatSessions,
   sendChatMessage,
+  getBusinessRecommendation,
 } from '../services/chatApi';
+import { fetchBusinesses } from '../services/businessApi';
+import BusinessRecommendationDialog from '../components/BusinessRecommendationDialog';
 
 const SUGGESTIONS = [
   { label: '🥥 Exports', query: 'Explain the coconut export process for a small Sri Lankan SME.' },
@@ -110,6 +113,9 @@ export default function AIChatPage() {
   const [bootLoading, setBootLoading] = useState(true);
   const [sendError, setSendError] = useState('');
   const [fetchError, setFetchError] = useState('');
+  const [showRecommendationDialog, setShowRecommendationDialog] = useState(false);
+  const [recDialogError, setRecDialogError] = useState('');
+  const [businessSector, setBusinessSector] = useState('coconut');
   const listEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -164,6 +170,12 @@ export default function AIChatPage() {
 
   const onNewChat = async () => {
     setSendError('');
+
+    if (!token) {
+      setSendError('You must be signed in to start a new chat.');
+      return;
+    }
+
     try {
       const s = await createChatSession(token, 'New chat');
       await loadSessions();
@@ -194,7 +206,7 @@ export default function AIChatPage() {
     } catch (error) {
       setSendError(error.message || 'Unable to delete chat session.');
     }
-  };
+  }; 
 
   const onSend = async (text) => {
     const q = (text ?? input).trim();
@@ -222,6 +234,55 @@ export default function AIChatPage() {
     } catch (e) {
       setMessages((prev) => prev.filter((m) => !String(m.id).startsWith('tmp-')));
       setSendError(e.message || 'Message failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onGetRecommendation = async () => {
+    if (!token) {
+      setSendError('You must be signed in to get a recommendation.');
+      return;
+    }
+    try {
+      const businesses = await fetchBusinesses(token);
+      if (businesses && businesses.length > 0) {
+        setBusinessSector(businesses[0].sector?.toLowerCase() || 'coconut');
+      }
+    } catch {
+      setBusinessSector('coconut');
+    }
+    setRecDialogError('');
+    setShowRecommendationDialog(true);
+  };
+
+  const onSubmitRecommendation = async (profileData) => {
+    setLoading(true);
+    setRecDialogError('');
+    try {
+      const rec = await getBusinessRecommendation(token, null, profileData);
+      if (rec.message && !rec.recommendedBusiness) {
+        setRecDialogError(rec.message);
+        setLoading(false);
+        return;
+      }
+      setShowRecommendationDialog(false);
+      const userMsg = {
+        id: `tmp-${Date.now()}`,
+        sender: 'USER',
+        message: `💡 ML Business Recommendation for ${profileData.sector} (Sector: ${profileData.sector}, Budget: ${profileData.budget}, Yield: ${profileData.monthly_yield}, Employees: ${profileData.employees}, Experience: ${profileData.experience})`,
+        createdAt: new Date().toISOString(),
+      };
+      const aiMsg = {
+        id: `tmp-${Date.now() + 1}`,
+        sender: 'AI',
+        message: `**Recommended Business:** ${rec.recommendedBusiness}\n\n**Guidance:**\n${rec.guidance}`,
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMsg, aiMsg]);
+      await loadSessions();
+    } catch (e) {
+      setRecDialogError(e.message || 'Failed to get recommendation.');
     } finally {
       setLoading(false);
     }
@@ -390,6 +451,19 @@ export default function AIChatPage() {
                     />
                   ))}
                 </Stack>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={onGetRecommendation}
+                  disabled={loading}
+                  sx={{
+                    mt: 2,
+                    background: 'linear-gradient(135deg,#22C55E,#16A34A)',
+                    fontWeight: 700,
+                  }}
+                >
+                  💡 Get ML Business Recommendation
+                </Button>
               </Box>
             )}
 
@@ -561,6 +635,15 @@ export default function AIChatPage() {
           </CardContent>
         </Card>
       </Stack>
+
+      <BusinessRecommendationDialog
+        open={showRecommendationDialog}
+        onClose={() => setShowRecommendationDialog(false)}
+        onSubmit={onSubmitRecommendation}
+        isLoading={loading}
+        error={recDialogError}
+        businessSector={businessSector}
+      />
     </Box>
   );
 }
