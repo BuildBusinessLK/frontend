@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import AddCommentRoundedIcon from '@mui/icons-material/AddCommentRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import WebIcon from '@mui/icons-material/Web';
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
@@ -30,6 +31,7 @@ import { ROUTES } from '../constants/routes';
 import { useChatPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 import {
   createChatSession,
+  deleteChatSession,
   fetchChatMessages,
   fetchChatSessions,
   sendChatMessage,
@@ -107,6 +109,7 @@ export default function AIChatPage() {
   const [loading, setLoading] = useState(false);
   const [bootLoading, setBootLoading] = useState(true);
   const [sendError, setSendError] = useState('');
+  const [fetchError, setFetchError] = useState('');
   const listEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -114,9 +117,16 @@ export default function AIChatPage() {
     listEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 
   const loadSessions = useCallback(async () => {
-    const list = await fetchChatSessions(token);
-    setSessions(list);
-    return list;
+    try {
+      const list = await fetchChatSessions(token);
+      setFetchError('');
+      setSessions(list);
+      return list;
+    } catch (error) {
+      setFetchError(error.message || 'Unable to load chat sessions.');
+      setSessions([]);
+      return [];
+    }
   }, [token]);
 
   useEffect(() => {
@@ -153,12 +163,37 @@ export default function AIChatPage() {
   useEffect(() => { scrollToBottom(); }, [messages, loading]);
 
   const onNewChat = async () => {
-    const s = await createChatSession(token, 'New chat');
-    await loadSessions();
-    setSessionId(s.id);
-    setMessages([]);
     setSendError('');
-    inputRef.current?.focus();
+    try {
+      const s = await createChatSession(token, 'New chat');
+      await loadSessions();
+      setSessionId(s.id);
+      setMessages([]);
+      inputRef.current?.focus();
+    } catch (error) {
+      setSendError(error.message || 'Unable to create chat session.');
+    }
+  };
+
+  const onDeleteSession = async (event, chatId) => {
+    event?.stopPropagation();
+    if (!chatId || !token) return;
+    setSendError('');
+    try {
+      await deleteChatSession(token, chatId);
+      const refreshed = await loadSessions();
+      const nextSession = refreshed[0]?.id ?? null;
+      if (sessionId === chatId) {
+        setSessionId(nextSession);
+        setMessages([]);
+      }
+      if (!refreshed.length) {
+        setSessionId(null);
+        setMessages([]);
+      }
+    } catch (error) {
+      setSendError(error.message || 'Unable to delete chat session.');
+    }
   };
 
   const onSend = async (text) => {
@@ -232,6 +267,14 @@ export default function AIChatPage() {
               New chat
             </Button>
             <Divider sx={{ mb: 1 }} />
+            {fetchError ? (
+              <Typography
+                variant="caption"
+                sx={{ color: 'error.main', textAlign: 'center', display: 'block', mb: 1 }}
+              >
+                {fetchError}
+              </Typography>
+            ) : null}
             {bootLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', pt: 2 }}>
                 <CircularProgress size={22} />
@@ -250,7 +293,7 @@ export default function AIChatPage() {
                     key={s.id}
                     selected={s.id === sessionId}
                     onClick={() => setSessionId(s.id)}
-                    sx={{ borderRadius: 2, mb: 0.5 }}
+                    sx={{ borderRadius: 2, mb: 0.5, pr: 1 }}
                   >
                     <ListItemText
                       primary={s.title || `Chat ${s.id}`}
@@ -258,6 +301,18 @@ export default function AIChatPage() {
                       primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600, noWrap: true }}
                       secondaryTypographyProps={{ fontSize: '0.75rem' }}
                     />
+                    <Tooltip title="Delete chat">
+                      <span>
+                        <IconButton
+                          edge="end"
+                          size="small"
+                          onClick={(event) => onDeleteSession(event, s.id)}
+                          sx={{ ml: 0.5, color: 'text.secondary' }}
+                        >
+                          <DeleteOutlineRoundedIcon fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                   </ListItemButton>
                 ))}
               </List>

@@ -59,7 +59,19 @@ export default function ProfileDialog({ open, onClose }) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 3 } }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          bgcolor: colors.background.secondary,
+          border: `1px solid ${colors.border.primary}`,
+        },
+      }}
+    >
       <DialogTitle sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
         Profile
         <Typography variant="body2" sx={{ color: colors.text.secondary, fontWeight: 400, mt: 0.5 }}>
