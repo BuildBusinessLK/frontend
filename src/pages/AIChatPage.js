@@ -19,6 +19,8 @@ import {
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import AddCommentRoundedIcon from '@mui/icons-material/AddCommentRounded';
 import WebIcon from '@mui/icons-material/Web';
+import EmailIcon from '@mui/icons-material/Email';
+import CampaignIcon from '@mui/icons-material/Campaign';
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -424,6 +426,40 @@ export default function AIChatPage() {
                           }}
                         >
                           Create website
+                        </Button>
+                      )}
+                      {m.sender === 'AI' && m.action === 'EMAIL_CAMPAIGN' && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          startIcon={<EmailIcon />}
+                          onClick={() => navigate(ROUTES.marketing.email)}
+                          sx={{
+                            mt: 1.5,
+                            borderRadius: 999,
+                            fontSize: '0.78rem',
+                            background: 'linear-gradient(135deg,#38BDF8,#0EA5E9)',
+                            boxShadow: '0 4px 12px rgba(14,165,233,0.3)',
+                          }}
+                        >
+                          Create email campaign
+                        </Button>
+                      )}
+                      {m.sender === 'AI' && m.action === 'SOCIAL_MARKETING' && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          startIcon={<CampaignIcon />}
+                          onClick={() => navigate(ROUTES.marketing.social)}
+                          sx={{
+                            mt: 1.5,
+                            borderRadius: 999,
+                            fontSize: '0.78rem',
+                            background: 'linear-gradient(135deg,#F59E0B,#F97316)',
+                            boxShadow: '0 4px 12px rgba(249,115,22,0.3)',
+                          }}
+                        >
+                          Create ad campaign
                         </Button>
                       )}
                       {m.sender === 'AI' && m.action === 'VIEW_PROFILE' && (
