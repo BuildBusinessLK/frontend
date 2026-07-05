@@ -12,6 +12,9 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { fetchPublicBusiness } from '../services/publicBusinessApi';
 
 /**
@@ -146,11 +149,28 @@ export default function HostedSmeBusinessPage() {
             {data.phone && <Typography>Phone: {data.phone}</Typography>}
             {data.socialLinks?.length > 0 && (
               <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 2 }}>
-                {data.socialLinks.map((s) => (
-                  <Button key={`${s.platform}-${s.url}`} size="small" href={s.url} target="_blank" rel="noreferrer" variant="outlined">
-                    {s.platform}
-                  </Button>
-                ))}
+                {data.socialLinks.map((s) => {
+                  const url = s.url?.trim();
+                  if (!url) return null;
+                  const platform = String(s.platform || '').toLowerCase();
+                  let icon = null;
+                  if (platform.includes('facebook')) icon = <FacebookIcon />;
+                  else if (platform.includes('instagram')) icon = <InstagramIcon />;
+                  else if (platform.includes('whatsapp')) icon = <WhatsAppIcon />;
+                  return (
+                    <Button
+                      key={`${s.platform}-${s.url}`}
+                      size="small"
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      variant="outlined"
+                      startIcon={icon}
+                    >
+                      {s.platform}
+                    </Button>
+                  );
+                })}
               </Stack>
             )}
           </CardContent>

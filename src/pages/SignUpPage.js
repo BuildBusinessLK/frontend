@@ -96,24 +96,24 @@ export default function SignUpPage() {
               </Box>
             </Typography>
             <Typography sx={{ color: colors.text.secondary, lineHeight: 1.75, maxWidth: 440 }}>
-              Coconut · Kithul · Palmyra-first dashboards combine conversational coaching (/ask), focused campaigns, and analytics placeholders tuned for SME rollout timelines your consortium pitched on timeline phases four-six.
+              Join BuildBusinessLK to unlock AI-powered business guidance, export insights, marketing support, and personalized recommendations for Coconut, Kithul, and Palmyrah enterprises.
             </Typography>
             <Stack direction="row" spacing={3} sx={{ mt: 5 }}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h5" sx={{ fontWeight: 900, color: brand.green.light }}>
-                  / ask
+                  
                 </Typography>
                 <Typography variant="caption" sx={{ color: colors.text.muted }}>
-                  Spring → Python
+                  
                 </Typography>
               </Box>
               <Box sx={{ width: 1, bgcolor: colors.border.primary }} />
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h5" sx={{ fontWeight: 900 }}>
-                  30 wk
+                  
                 </Typography>
                 <Typography variant="caption" sx={{ color: colors.text.muted }}>
-                  Pilot horizon
+                  
                 </Typography>
               </Box>
             </Stack>
@@ -151,9 +151,9 @@ export default function SignUpPage() {
                   <AutoAwesomeRoundedIcon sx={{ color: '#fff' }} />
                 </Box>
                 <Box>
-                  <Typography sx={{ fontWeight: 900, letterSpacing: '-0.03em' }}>Create workspace</Typography>
+                  <Typography sx={{ fontWeight: 900, letterSpacing: '-0.03em' }}>Create An Account</Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Secure account · Spring Boot + MySQL
+                    Coconut-Kithul-Palmyrah
                   </Typography>
                 </Box>
               </Box>
@@ -234,7 +234,7 @@ export default function SignUpPage() {
                     },
                   }}
                 >
-                  {loading ? 'Creating account…' : 'Sign up & enter workspace'}
+                  {loading ? 'Creating account…' : 'Sign up '}
                 </Button>
               </Stack>
             </Box>
