@@ -30,3 +30,11 @@ export async function updateBusiness(token, id, body) {
   if (!res.ok) throw new Error(data.message || data.error || 'Update failed');
   return data;
 }
+
+export async function fetchBusinessAnalytics(token, id) {
+  const res = await fetch(`${SPRING_BASE}/api/businesses/${id}/analytics`, {
+    headers: { ...authHeaders(token) },
+  });
+  if (!res.ok) throw new Error('Failed to load business analytics');
+  return res.json();
+}

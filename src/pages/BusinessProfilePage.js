@@ -40,6 +40,7 @@ export default function BusinessProfilePage() {
   const [businessHoursClose, setBusinessHoursClose] = useState('');
   const [workingDays, setWorkingDays] = useState('');
   const [googleMapsUrl, setGoogleMapsUrl] = useState('');
+  const [intentMessage, setIntentMessage] = useState('');
   const [products, setProducts] = useState([emptyProduct()]);
   const [socialLinks, setSocialLinks] = useState([emptySocial()]);
 
@@ -66,6 +67,7 @@ export default function BusinessProfilePage() {
           setBusinessHoursClose(b.businessHoursClose || '');
           setWorkingDays(b.workingDays || '');
           setGoogleMapsUrl(b.googleMapsUrl || '');
+          setIntentMessage(b.intentMessage || '');
           if (b.products?.length) {
 
             setProducts(
@@ -111,6 +113,7 @@ export default function BusinessProfilePage() {
     businessHoursClose: businessHoursClose.trim() || undefined,
     workingDays: workingDays.trim() || undefined,
     googleMapsUrl: googleMapsUrl.trim() || undefined,
+    intentMessage: intentMessage.trim() || undefined,
     products: products
 
       .filter((p) => p.name.trim())
@@ -242,6 +245,13 @@ export default function BusinessProfilePage() {
               value={googleMapsUrl}
               onChange={(e) => setGoogleMapsUrl(e.target.value)}
               helperText="Link to your store's Google Maps location pin"
+              fullWidth
+            />
+            <TextField
+              label="Custom WhatsApp Message"
+              value={intentMessage}
+              onChange={(e) => setIntentMessage(e.target.value)}
+              helperText="Default message sent when customers click WhatsApp button. E.g. 'I am interested in buying...'"
               fullWidth
             />
 

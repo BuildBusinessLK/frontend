@@ -216,6 +216,7 @@ export default function WebsiteMarketingPage() {
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [intentMessage, setIntentMessage] = useState('');
 
   // Actions
   const [generating, setGenerating] = useState(false);
@@ -233,6 +234,7 @@ export default function WebsiteMarketingPage() {
         if (cancelled || !list.length) return;
         const b = list[0];
         setBusiness(b);
+        setIntentMessage(b.intentMessage || '');
         setLoadingWebsite(true);
         try {
           const w = await fetchLatestWebsite(token, b.id);
@@ -273,6 +275,7 @@ export default function WebsiteMarketingPage() {
         coverImageUrl: coverImageUrl || undefined,
         contactEmail: contactEmail || undefined,
         phone: phone || undefined,
+        intentMessage: intentMessage || undefined,
       });
       setWebsite(w);
     } catch (e) {
@@ -495,6 +498,14 @@ export default function WebsiteMarketingPage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+94 77 123 4567"
+                    />
+                    <TextField
+                      fullWidth size="small"
+                      label="Custom WhatsApp Message"
+                      value={intentMessage}
+                      onChange={(e) => setIntentMessage(e.target.value)}
+                      placeholder="I am interested in buying..."
+                      helperText="Default message sent when customers click WhatsApp button."
                     />
                   </Stack>
 
