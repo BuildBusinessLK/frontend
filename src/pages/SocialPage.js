@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -20,11 +20,13 @@ import DownloadIcon from '@mui/icons-material/Download';
 import LaunchIcon from '@mui/icons-material/Launch';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
+import { fetchBusinesses } from '../services/businessApi';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5003';
-const ADS_GENERATOR_URL = 'https://atxp.pics/chat';
+const API_BASE_URL = process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
+//const ADS_GENERATOR_URL = 'https://atxp.pics/chat';
 
 const platformOptions = [
   { value: 'facebook', label: 'Facebook' },
@@ -36,15 +38,55 @@ const platformOptions = [
 
 const toneOptions = ['professional', 'friendly', 'urgent', 'luxury', 'fun'];
 
-const normalizeHandle = (value) =>
-  String(value || '')
-    .trim()
-    .replace(/^@/, '')
-    .replace(/^https?:\/\//, '')
-    .replace(/^www\./, '')
-    .replace(/\/$/, '');
+const normalizeHandle = (value, platform) => {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  const withoutAt = raw.replace(/^@/, '').replace(/\/$/, '');
+
+  if (/^(https?:\/\/|www\.)/i.test(withoutAt)) {
+    try {
+      const resolved = withoutAt.startsWith('http') ? withoutAt : `https://${withoutAt}`;
+      const url = new URL(resolved);
+      const hostname = url.hostname.toLowerCase().replace(/^www\./, '');
+      const pathParts = url.pathname.split('/').filter(Boolean);
+
+      if (platform === 'facebook') {
+        return pathParts.find((part) => !['pages', 'groups', 'events', 'marketplace', 'profile'].includes(part)) || pathParts[0] || '';
+      }
+
+      if (platform === 'instagram' || platform === 'twitter') {
+        return pathParts[0] || '';
+      }
+
+      if (platform === 'linkedin') {
+        return pathParts[pathParts.length - 1] || pathParts[0] || '';
+      }
+
+      if (platform === 'whatsapp') {
+        return pathParts[0] || '';
+      }
+
+      return pathParts[0] || '';
+    } catch {
+      return withoutAt.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+    }
+  }
+
+  return withoutAt;
+};
 
 const normalizeWhatsAppNumber = (value) => String(value || '').replace(/[^\d]/g, '');
+
+const inferPlatformKey = (platform) => {
+  const value = String(platform || '').toLowerCase();
+  if (value.includes('facebook')) return 'facebook';
+  if (value.includes('instagram')) return 'instagram';
+  if (value.includes('twitter') || value.includes('x')) return 'twitter';
+  if (value.includes('linkedin')) return 'linkedin';
+  if (value.includes('whatsapp')) return 'whatsapp';
+  return '';
+};
 
 const parseGroupLinks = (raw) =>
   String(raw || '')
@@ -134,11 +176,13 @@ const buildPostPngDataUrl = async (post, platform) => {
 export default function SocialPage() {
   const theme = useTheme();
   const { mode } = useThemeMode();
+  const { token } = useAuth();
   const pagePt = useMarketingPageTopPadding();
 
   const [adIdea, setAdIdea] = useState('');
   const [tone, setTone] = useState('professional');
   const [platform, setPlatform] = useState('facebook');
+  const [websiteUrl, setWebsiteUrl] = useState('');
   const [ad, setAd] = useState(null);
   const [loadingAd, setLoadingAd] = useState(false);
   const [adError, setAdError] = useState('');
@@ -165,45 +209,152 @@ export default function SocialPage() {
     return configured.length ? configured : platformOptions.map((option) => option.value);
   }, [socialAccounts]);
 
-  const generateAd = async () => {
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const businesses = await fetchBusinesses(token);
+        const business = Array.isArray(businesses) ? businesses[0] : null;
+
+        if (!business || cancelled) return;
+
+        const nextAccounts = {
+          facebook: '',
+          instagram: '',
+          twitter: '',
+          linkedin: '',
+          whatsapp: '',
+          whatsappGroups: '',
+        };
+
+        (business.socialLinks || []).forEach((link) => {
+          const key = inferPlatformKey(link?.platform);
+          if (!key) return;
+
+          const value = normalizeHandle(link?.url, key);
+          if (key === 'whatsapp') {
+            nextAccounts.whatsapp = value;
+          } else {
+            nextAccounts[key] = value;
+          }
+        });
+
+        setSocialAccounts((current) => ({ ...current, ...nextAccounts }));
+      } catch (error) {
+        console.error('Failed to prefill social accounts from business profile', error);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+//   const generateAd = async () => {
+//     if (!adIdea.trim()) {
+//       setAdError('Enter an ad idea first.');
+//       return;
+//     }
+
+//     setLoadingAd(true);
+//     setAdError('');
+
+//     try {
+      
+
+//      const response = await axios.post(
+//     `${API_BASE_URL}/api/ads/generate`,
+//     {
+//         idea: adIdea.trim(),
+//         platform,
+//         tone,
+//         website: websiteUrl.trim()
+//     },
+//     {
+//         headers: {
+//             Authorization: `Bearer ${token}`
+//         }
+//     }
+// );
+
+// const data = response.data;
+// //await navigator.clipboard.writeText(data.prompt);
+
+      
+
+//       // Open external site in new window
+//       //const externalUrl = `${ADS_GENERATOR_URL}?occasion=business${websiteUrl.trim() ? `&site=${encodeURIComponent(websiteUrl.trim())}` : ''}`;
+//       //window.open(externalUrl, '_blank', 'noopener,noreferrer');
+
+//       // Show confirmation
+//       setAd({
+//     headline: "Advertisement Generated",
+
+//     description: data.message,
+
+//     cta: "Advertisement Ready",
+
+//     prompt: data.prompt,
+
+//     generatedAds: data.generated_ads,
+
+//     shareLinks: data.share_links
+// });
+//     } catch (error) {
+//       console.error(error);
+//       setAdError('Failed to copy prompt or open generator. Please try again.');
+//     } finally {
+//       setLoadingAd(false);
+//     }
+//   };
+
+const generateAd = async () => {
+
     if (!adIdea.trim()) {
-      setAdError('Enter an ad idea first.');
-      return;
+        setAdError("Enter an ad idea");
+        return;
     }
 
     setLoadingAd(true);
-    setAdError('');
+    setAdError("");
 
     try {
-      const prompt = [
-        'Create a creative business ad based on the following user idea.',
-        `Idea: ${adIdea.trim()}`,
-        `Tone: ${tone}`,
-        `Platform: ${platform}`,
-        'Write compelling copy, a strong headline, and a clear call to action.',
-      ].join('\n');
 
-      // Copy prompt to clipboard
-      await navigator.clipboard.writeText(prompt);
+        const response = await axios.post(
+            `${API_BASE_URL}/api/ads/generate`,
+            {
+                idea: adIdea,
+                tone: tone,
+                platform: platform,
+                website: websiteUrl
+            }
+        );
 
-      // Open external site in new window
-      const externalUrl = `${ADS_GENERATOR_URL}?occasion=business`;
-      window.open(externalUrl, '_blank', 'noopener,noreferrer');
+        setAd({
+            headline: "Advertisement Generated",
+            description: response.data.message,
+            generatedAds: response.data.generated_ads,
+            prompt: response.data.prompt,
+            shareLinks: response.data.share_links
+        });
 
-      // Show confirmation
-      setAd({
-        headline: '✓ Prompt copied & generator opened',
-        description: 'Your prompt has been automatically copied to clipboard. The ATXP ad generator opened in a new window.',
-        cta: 'Paste your prompt in the generator',
-        prompt,
-      });
-    } catch (error) {
-      console.error(error);
-      setAdError('Failed to copy prompt or open generator. Please try again.');
-    } finally {
-      setLoadingAd(false);
     }
-  };
+    catch(error){
+
+        setAdError("Failed to generate advertisement");
+
+    }
+    finally{
+
+        setLoadingAd(false);
+
+    }
+
+};
+
 
   const generatePosts = async () => {
     if (!postIdea.trim()) {
@@ -234,7 +385,7 @@ export default function SocialPage() {
   };
 
   const openShare = async (post, postPlatform) => {
-    const account = normalizeHandle(socialAccounts[postPlatform]);
+    const account = normalizeHandle(socialAccounts[postPlatform], postPlatform);
     const encoded = encodeURIComponent(buildPostText(post));
 
     await copyText(buildPostText(post));
@@ -366,6 +517,13 @@ export default function SocialPage() {
                       ))}
                     </TextField>
                   </Stack>
+                  <TextField
+                    label="Website / site to mention"
+                    value={websiteUrl}
+                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    placeholder="https://yourbusiness.lk"
+                    helperText="Optional. Added to the ad prompt and generator link."
+                  />
                   {adError && <Alert severity="error">{adError}</Alert>}
                   <Button variant="contained" onClick={generateAd} disabled={loadingAd}>
                     {loadingAd ? 'Generating...' : 'Generate Ad'}
@@ -382,6 +540,50 @@ export default function SocialPage() {
                     </Typography>
                     <Typography sx={{ color: theme.palette.text.secondary, mb: 2 }}>{ad.description}</Typography>
                     <Chip label={ad.cta} color="primary" />
+                    {ad.generatedAds && (
+                      // <Box sx={{ mt: 2 }}>
+                      //   <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
+                      //     Generated Ad Copy
+                      //   </Typography>
+                      //   <Paper
+                      //     variant="outlined"
+                      //     sx={{
+                      //       p: 2,
+                      //       borderRadius: 2,
+                      //       bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.75)',
+                      //       whiteSpace: 'pre-wrap',
+                      //     }}
+                      //   >
+                      //     <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+                      //       {ad.generatedAds}
+                      //     </Typography>
+                      //   </Paper>
+                      // </Box>
+                      <Box sx={{ mt:2 }}>
+
+<Typography
+variant="h6"
+fontWeight="bold"
+mb={2}
+>
+
+Generated Advertisement
+
+</Typography>
+
+<Paper
+sx={{
+padding:2,
+whiteSpace:"pre-wrap"
+}}
+>
+
+{ad.generatedAds}
+
+</Paper>
+
+</Box>
+                    )}
                     {ad.prompt && (
                       <Box sx={{ mt: 2 }}>
                         <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>

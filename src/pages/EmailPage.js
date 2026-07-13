@@ -20,7 +20,7 @@ import { useThemeMode } from '../contexts/ThemeContext';
 import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5003';
+const API_BASE_URL = process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
 
 const getApiErrorMessage = (error, fallbackMessage) => {
   if (error.response?.data?.error) return error.response.data.error;
@@ -65,7 +65,7 @@ export default function EmailPage() {
         idea: emailIdea,
       });
 
-      setEmail(res.data.email);
+      setEmail(res.data.email || { subject: res.data.subject, body: res.data.body });
       setEmailError('');
     } catch (error) {
       console.error('Email generation error:', error);
