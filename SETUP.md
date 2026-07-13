@@ -147,7 +147,7 @@ The backend runs on **port 8083**.
 cd BuildBusinessLK/backend/backend
 
 # Run the Spring Boot server
-mvn spring-boot:run
+
 ```
 
 The backend will be available at: **http://localhost:8083**
@@ -260,6 +260,7 @@ cd BuildBusinessLK/ai-service
 
 # Install Python dependencies (only once)
 pip install -r requirements.txt
+
 
 # Start the FastAPI server
 uvicorn app:app --reload

@@ -53,12 +53,11 @@ export async function sendChatMessage(token, { sessionId, question }) {
   return data;
 }
 
-export async function getBusinessRecommendation(token, userProfile, businessProfile) {
-  const AI_SERVICE_BASE = process.env.REACT_APP_AI_SERVICE_BASE_URL || 'http://localhost:8000';
-  const res = await fetch(`${AI_SERVICE_BASE}/business-advisor`, {
+export async function getBusinessRecommendation(token, sessionId, userProfile, businessProfile) {
+  const res = await fetch(`${SPRING_BASE}/api/chat/recommendation`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userProfile, businessProfile }),
+    headers: { 'Content-Type': 'application/json', ...authHeaders(token) },
+    body: JSON.stringify({ sessionId, userProfile, businessProfile }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || 'Failed to generate recommendation');
