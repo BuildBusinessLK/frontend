@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import './AdsGenerationPage.css';
+import { authHeaders } from '../services/authApi';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5003';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8083';
 
 const AdsGenerationPage = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,10 @@ const AdsGenerationPage = () => {
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const [error, setError] = useState(null);
+  const [visuals, setVisuals] = useState({});
+  const [loadingVisuals, setLoadingVisuals] = useState(false);
+  const [revision, setRevision] = useState('');
+  const [conversation, setConversation] = useState([]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -29,35 +34,81 @@ const AdsGenerationPage = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem("token");
-
-const token = localStorage.getItem("token");
-
-const res = await fetch(`${API_BASE_URL}/api/ads/generate`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    idea: formData.idea,
-    product_type: formData.productType,
-    target_audience: formData.targetAudience,
-    tone: formData.tone
-  })
-});
-      };
+      const res = await fetch(`${API_BASE_URL}/api/ads/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders()
+        },
+        body: JSON.stringify({
+          idea: formData.idea,
+          product_type: formData.productType,
+          target_audience: formData.targetAudience,
+          tone: formData.tone
+        })
+      });
 
       if (!res.ok) {
         throw new Error('Failed to generate ads');
       }
 
       const data = await res.json();
-      setResponse(data);
+      const generatedAds = data.generatedAds || data.generated_ads || '';
+      setResponse({
+        ...data,
+        generatedAds,
+        generated_ads: generatedAds,
+      });
     } catch (err) {
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateVisuals = async (instruction = '') => {
+    if (!response?.generatedAds) return;
+    setLoadingVisuals(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/ads/visuals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ idea: formData.idea, generatedAds: response.generatedAds, instruction }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Failed to generate visual ads');
+      setVisuals(data.images || {});
+      return data;
+    } finally {
+      setLoadingVisuals(false);
+    }
+  };
+
+  const handleRevision = async (e) => {
+    e.preventDefault();
+    const instruction = revision.trim();
+    if (!instruction || !response?.generatedAds) return;
+    setConversation((items) => [...items, { role: 'user', text: instruction }]);
+    setRevision('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/ads/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({
+          idea: `${formData.idea}\n\nCurrent ad copy:\n${response.generatedAds}\n\nEdit request: ${instruction}`,
+          product_type: formData.productType,
+          target_audience: formData.targetAudience,
+          tone: formData.tone,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.generatedAds) throw new Error('Could not apply that change');
+      setResponse((current) => ({ ...current, generatedAds: data.generatedAds, generated_ads: data.generatedAds }));
+      if (Object.keys(visuals).length) await generateVisuals(instruction);
+      setConversation((items) => [...items, { role: 'assistant', text: 'Updated the ad copy and regenerated the visual creative where applicable.' }]);
+    } catch (err) {
+      setConversation((items) => [...items, { role: 'assistant', text: err.message || 'I could not apply that change.' }]);
     }
   };
 
@@ -196,7 +247,7 @@ const res = await fetch(`${API_BASE_URL}/api/ads/generate`, {
               <div className="ads-box">
                 <h3>Ad Variations</h3>
                 <div className="ads-content-display">
-                  {response.generated_ads}
+                  {response.generatedAds || response.generated_ads}
                 </div>
                 <button 
                   className="copy-btn"
@@ -204,6 +255,34 @@ const res = await fetch(`${API_BASE_URL}/api/ads/generate`, {
                 >
                   📋 Copy All Ads
                 </button>
+              </div>
+
+              <div className="ads-box">
+                <h3>Professional Visual Ads</h3>
+                <p>Generate image creatives sized for Facebook/LinkedIn, Instagram/WhatsApp, and TikTok. The text ad remains available above.</p>
+                <button className="copy-btn" onClick={() => generateVisuals()} disabled={loadingVisuals}>
+                  {loadingVisuals ? 'Creating visual ads...' : 'Generate Visual Ads'}
+                </button>
+                <div className="ad-visual-grid">
+                  {Object.entries(visuals).map(([platform, image]) => (
+                    <figure key={platform}>
+                      <img src={image} alt={`${platform} advertisement`} />
+                      <figcaption>{platform.replace('_', ' / ')}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ads-box">
+                <h3>Ask AI to Edit Your Ad</h3>
+                <p>For example: “remove the discount”, “use a calmer background”, or “make it suitable for young families”.</p>
+                <div className="ad-conversation">
+                  {conversation.map((message, index) => <p key={index} className={message.role}><strong>{message.role === 'user' ? 'You' : 'AI'}:</strong> {message.text}</p>)}
+                </div>
+                <form onSubmit={handleRevision}>
+                  <input value={revision} onChange={(e) => setRevision(e.target.value)} placeholder="Describe what to change or remove" />
+                  <button className="copy-btn" type="submit">Apply Change</button>
+                </form>
               </div>
 
               <div className="share-section">
@@ -249,6 +328,6 @@ const res = await fetch(`${API_BASE_URL}/api/ads/generate`, {
       </div>
     </div>
   );
-;
+};
 
 export default AdsGenerationPage;

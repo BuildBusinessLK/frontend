@@ -5,7 +5,11 @@ const SPRING_BASE =
 
 export async function fetchBusinesses(token) {
   const res = await fetch(`${SPRING_BASE}/api/businesses`, { headers: { ...authHeaders(token) } });
-  if (!res.ok) throw new Error('Failed to load businesses');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    const detail = data.message || data.error || `HTTP ${res.status}`;
+    throw new Error(`Failed to load businesses (${detail})`);
+  }
   return res.json();
 }
 

@@ -11,6 +11,8 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => readStoredSession());
+  // A stored token can be expired, revoked, or signed by an older backend configuration.
+  const [sessionValidated, setSessionValidated] = useState(() => !readStoredSession()?.token);
 
   useEffect(() => {
     try {
@@ -22,12 +24,13 @@ export function AuthProvider({ children }) {
 
   const user = session?.user ?? null;
   const token = session?.token ?? null;
-  const isAuthenticated = Boolean(token && user);
+  const isAuthenticated = Boolean(sessionValidated && token && user);
 
   const signIn = useCallback(async (email, password) => {
     const next = await apiLogin({ email: email.trim(), password });
     writeStoredSession(next);
     setSession(next);
+    setSessionValidated(true);
   }, []);
 
   const signUp = useCallback(async (fullName, email, password) => {
@@ -38,11 +41,13 @@ export function AuthProvider({ children }) {
     });
     writeStoredSession(next);
     setSession(next);
+    setSessionValidated(true);
   }, []);
 
   const signOut = useCallback(() => {
     writeStoredSession(null);
     setSession(null);
+    setSessionValidated(true);
   }, []);
 
   const setUser = useCallback((nextUser) => {
@@ -54,6 +59,32 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
+  useEffect(() => {
+    if (!token) {
+      setSessionValidated(true);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setSessionValidated(false);
+    apiFetchMe(token)
+      .then((profile) => {
+        if (!cancelled) setUser(profile);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          writeStoredSession(null);
+          setSession(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSessionValidated(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, setUser]);
   const refreshProfile = useCallback(async () => {
     if (!token) return null;
     try {
@@ -71,13 +102,14 @@ export function AuthProvider({ children }) {
       user,
       token,
       isAuthenticated,
+      sessionValidated,
       signIn,
       signUp,
       signOut,
       setUser,
       refreshProfile,
     }),
-    [user, token, isAuthenticated, signIn, signUp, signOut, setUser, refreshProfile],
+    [user, token, isAuthenticated, sessionValidated, signIn, signUp, signOut, setUser, refreshProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

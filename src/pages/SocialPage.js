@@ -24,6 +24,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 import { fetchBusinesses } from '../services/businessApi';
+import { authHeaders } from '../services/authApi';
 
 const API_BASE_URL = process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
 //const ADS_GENERATOR_URL = 'https://atxp.pics/chat';
@@ -186,6 +187,10 @@ export default function SocialPage() {
   const [ad, setAd] = useState(null);
   const [loadingAd, setLoadingAd] = useState(false);
   const [adError, setAdError] = useState('');
+  const [adVisuals, setAdVisuals] = useState({});
+  const [loadingVisuals, setLoadingVisuals] = useState(false);
+  const [editRequest, setEditRequest] = useState('');
+  const [adConversation, setAdConversation] = useState([]);
 
   const [postIdea, setPostIdea] = useState('');
   const [posts, setPosts] = useState([]);
@@ -253,108 +258,61 @@ export default function SocialPage() {
     };
   }, [token]);
 
-//   const generateAd = async () => {
-//     if (!adIdea.trim()) {
-//       setAdError('Enter an ad idea first.');
-//       return;
-//     }
-
-//     setLoadingAd(true);
-//     setAdError('');
-
-//     try {
-      
-
-//      const response = await axios.post(
-//     `${API_BASE_URL}/api/ads/generate`,
-//     {
-//         idea: adIdea.trim(),
-//         platform,
-//         tone,
-//         website: websiteUrl.trim()
-//     },
-//     {
-//         headers: {
-//             Authorization: `Bearer ${token}`
-//         }
-//     }
-// );
-
-// const data = response.data;
-// //await navigator.clipboard.writeText(data.prompt);
-
-      
-
-//       // Open external site in new window
-//       //const externalUrl = `${ADS_GENERATOR_URL}?occasion=business${websiteUrl.trim() ? `&site=${encodeURIComponent(websiteUrl.trim())}` : ''}`;
-//       //window.open(externalUrl, '_blank', 'noopener,noreferrer');
-
-//       // Show confirmation
-//       setAd({
-//     headline: "Advertisement Generated",
-
-//     description: data.message,
-
-//     cta: "Advertisement Ready",
-
-//     prompt: data.prompt,
-
-//     generatedAds: data.generated_ads,
-
-//     shareLinks: data.share_links
-// });
-//     } catch (error) {
-//       console.error(error);
-//       setAdError('Failed to copy prompt or open generator. Please try again.');
-//     } finally {
-//       setLoadingAd(false);
-//     }
-//   };
-
-const generateAd = async () => {
-
+  const generateAd = async () => {
     if (!adIdea.trim()) {
-        setAdError("Enter an ad idea");
-        return;
+      setAdError('Enter an ad idea first.');
+      return;
     }
 
     setLoadingAd(true);
-    setAdError("");
+    setAdError('');
 
     try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/ads/generate`,
+        {
+          idea: adIdea,
+          tone,
+          platform,
+          website: websiteUrl,
+        },
+        {
+          headers: authHeaders(token),
+        }
+      );
 
-        const response = await axios.post(
-            `${API_BASE_URL}/api/ads/generate`,
-            {
-                idea: adIdea,
-                tone: tone,
-                platform: platform,
-                website: websiteUrl
-            }
+      const payload = response?.data || {};
+      const generatedAds = payload.generatedAds || payload.generated_ads || '';
+
+      setAd({
+        headline: generatedAds ? 'Advertisement Generated' : 'Ad Draft Ready',
+        generatedAds,
+        status: payload.status || 'success',
+        message: payload.message || 'Your ad was generated from your idea and business profile.',
+      });
+      setAdVisuals({});
+      setAdConversation([]);
+
+      if (!generatedAds.trim()) {
+        // Surface the real backend error (e.g. "No business found for the
+        // current user") instead of a generic message that hides the cause.
+        setAdError(
+          payload.status === 'error' && payload.message
+            ? payload.message
+            : 'The ad service returned no content. Please try again.'
         );
-
-        setAd({
-            headline: "Advertisement Generated",
-            description: response.data.message,
-            generatedAds: response.data.generated_ads,
-            prompt: response.data.prompt,
-            shareLinks: response.data.share_links
-        });
-
+      }
+    } catch (error) {
+      console.error(error);
+      setAdError(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          'Failed to generate advertisement'
+      );
+    } finally {
+      setLoadingAd(false);
     }
-    catch(error){
-
-        setAdError("Failed to generate advertisement");
-
-    }
-    finally{
-
-        setLoadingAd(false);
-
-    }
-
-};
-
+  };
 
   const generatePosts = async () => {
     if (!postIdea.trim()) {
@@ -377,6 +335,44 @@ const generateAd = async () => {
       setPostsError('Failed to generate posts. Check the backend endpoint and try again.');
     } finally {
       setLoadingPosts(false);
+    }
+  };
+
+  const generateAdVisuals = async (instruction = '') => {
+    if (!ad?.generatedAds) return;
+    setLoadingVisuals(true);
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/ads/visuals`, {
+        idea: adIdea,
+        generatedAds: ad.generatedAds,
+        instruction,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      setAdVisuals(response.data.images || {});
+    } catch (error) {
+      setAdError(error.response?.data?.message || 'Could not generate visual ads. Check the image API setup.');
+    } finally {
+      setLoadingVisuals(false);
+    }
+  };
+
+  const applyAdEdit = async () => {
+    const instruction = editRequest.trim();
+    if (!instruction || !ad?.generatedAds) return;
+    setAdConversation((items) => [...items, { role: 'You', text: instruction }]);
+    setEditRequest('');
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/ads/generate`, {
+        idea: `${adIdea}\n\nCurrent ad copy:\n${ad.generatedAds}\n\nEdit request: ${instruction}`,
+        tone,
+        platform,
+        website: websiteUrl,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      const generatedAds = response.data.generatedAds || response.data.generated_ads || '';
+      setAd((current) => ({ ...current, generatedAds }));
+      if (Object.keys(adVisuals).length) await generateAdVisuals(instruction);
+      setAdConversation((items) => [...items, { role: 'AI', text: 'I updated the ad copy and refreshed the visual creative.' }]);
+    } catch (error) {
+      setAdConversation((items) => [...items, { role: 'AI', text: 'I could not apply that edit. Please try again.' }]);
     }
   };
 
@@ -500,7 +496,14 @@ const generateAd = async () => {
                   Generate Ad
                 </Typography>
                 <Stack spacing={2}>
-                  <TextField label="Ad Idea" multiline rows={4} value={adIdea} onChange={(e) => setAdIdea(e.target.value)} />
+                  <TextField
+                    label="Ad idea or campaign concept"
+                    multiline
+                    rows={4}
+                    value={adIdea}
+                    onChange={(e) => setAdIdea(e.target.value)}
+                    helperText="We’ll use your saved business profile and this idea to create an ad copy draft."
+                  />
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                     <TextField select label="Tone" value={tone} onChange={(e) => setTone(e.target.value)} fullWidth>
                       {toneOptions.map((option) => (
@@ -538,8 +541,8 @@ const generateAd = async () => {
                     <Typography variant="h5" sx={{ fontWeight: 800, mt: 1, mb: 1 }}>
                       {ad.headline}
                     </Typography>
-                    <Typography sx={{ color: theme.palette.text.secondary, mb: 2 }}>{ad.description}</Typography>
-                    <Chip label={ad.cta} color="primary" />
+                    <Typography sx={{ color: theme.palette.text.secondary, mb: 2 }}>{ad.message}</Typography>
+                    <Chip label={ad.status === 'success' ? 'Ready to share' : ad.status} color="success" />
                     {ad.generatedAds && (
                       // <Box sx={{ mt: 2 }}>
                       //   <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
@@ -559,6 +562,7 @@ const generateAd = async () => {
                       //     </Typography>
                       //   </Paper>
                       // </Box>
+                      <>
                       <Box sx={{ mt:2 }}>
 
 <Typography
@@ -583,26 +587,39 @@ whiteSpace:"pre-wrap"
 </Paper>
 
 </Box>
-                    )}
-                    {ad.prompt && (
-                      <Box sx={{ mt: 2 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
-                          Your Generated Prompt
+                      <Box sx={{ mt: 3 }}>
+                        <Typography variant="h6" fontWeight="bold" mb={1}>Professional Visual Ads</Typography>
+                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1.5 }}>
+                          Create extra image creatives for Facebook/LinkedIn, Instagram/WhatsApp, and TikTok. Your text ad stays unchanged.
                         </Typography>
-                        <Paper
-                          variant="outlined"
-                          sx={{
-                            p: 2,
-                            borderRadius: 2,
-                            bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.75)',
-                            whiteSpace: 'pre-wrap',
-                          }}
-                        >
-                          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-                            {ad.prompt}
-                          </Typography>
-                        </Paper>
+                        <Button variant="outlined" onClick={() => generateAdVisuals()} disabled={loadingVisuals}>
+                          {loadingVisuals ? 'Creating Visual Ads...' : 'Generate Visual Ads'}
+                        </Button>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 2, flexWrap: 'wrap' }}>
+                          {Object.entries(adVisuals).map(([platformName, image]) => (
+                            <Box key={platformName} sx={{ width: { xs: '100%', sm: 190 } }}>
+                              <img src={image} alt={`${platformName} ad`} style={{ width: '100%', borderRadius: 8, display: 'block' }} />
+                              <Typography variant="caption" sx={{ textTransform: 'capitalize' }}>{platformName.replace('_', ' / ')}</Typography>
+                            </Box>
+                          ))}
+                        </Stack>
                       </Box>
+                      <Box sx={{ mt: 3 }}>
+                        <Typography variant="h6" fontWeight="bold" mb={1}>Edit with AI</Typography>
+                        <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 1 }}>
+                          Ask to change or remove anything, for example “remove the discount” or “use a calmer background”.
+                        </Typography>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                          <TextField value={editRequest} onChange={(e) => setEditRequest(e.target.value)} placeholder="Describe the edit" fullWidth size="small" />
+                          <Button variant="contained" onClick={applyAdEdit}>Apply Edit</Button>
+                        </Stack>
+                        {adConversation.map((message, index) => (
+                          <Typography key={index} variant="body2" sx={{ mt: 1, p: 1, borderRadius: 1, bgcolor: message.role === 'You' ? 'rgba(59,130,246,0.12)' : 'rgba(16,185,129,0.12)' }}>
+                            <strong>{message.role}:</strong> {message.text}
+                          </Typography>
+                        ))}
+                      </Box>
+                      </>
                     )}
                   </Paper>
                 )}
@@ -638,78 +655,6 @@ whiteSpace:"pre-wrap"
               </CardContent>
             </Card>
           </Stack>
-
-          <Card sx={{ borderRadius: 3, background: mode === 'dark' ? 'rgba(6,10,13,0.8)' : 'rgba(255,255,255,0.92)' }}>
-            <CardContent sx={{ p: 3.5 }}>
-              <Typography variant="h6" sx={{ fontWeight: 800, mb: 2.5 }}>
-                Generate Posts
-              </Typography>
-              <Stack spacing={2}>
-                <TextField
-                  label="Post Idea"
-                  multiline
-                  minRows={4}
-                  value={postIdea}
-                  onChange={(e) => setPostIdea(e.target.value)}
-                  placeholder="Describe the product, offer, campaign, or announcement"
-                />
-                {postsError && <Alert severity="error">{postsError}</Alert>}
-                <Button variant="contained" onClick={generatePosts} disabled={loadingPosts}>
-                  {loadingPosts ? 'Generating...' : 'Generate Posts'}
-                </Button>
-              </Stack>
-            </CardContent>
-          </Card>
-
-          {posts.length > 0 && (
-            <Stack spacing={2.5}>
-              {posts.map((post, index) => (
-                <Card key={`${post.platform}-${index}`} sx={{ borderRadius: 3, background: mode === 'dark' ? 'rgba(6,10,13,0.8)' : 'rgba(255,255,255,0.92)' }}>
-                  <CardContent sx={{ p: 3.5 }}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={2}>
-                      <Box>
-                        <Chip label={post.platform} sx={{ mb: 1 }} />
-                        <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
-                          {post.hook}
-                        </Typography>
-                        <Typography sx={{ color: theme.palette.text.secondary, mb: 1.5 }}>{post.caption}</Typography>
-                        <Typography sx={{ color: theme.palette.text.secondary }}>{post.hashtags}</Typography>
-                      </Box>
-
-                      <Stack spacing={1.25} sx={{ minWidth: 220 }}>
-                        <Button
-                          variant="outlined"
-                          startIcon={<ContentCopyIcon />}
-                          onClick={() => copyText(buildPostText(post))}
-                        >
-                          Copy Text
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          startIcon={<LaunchIcon />}
-                          onClick={() => openShare(post, post.platform)}
-                        >
-                          Open Share
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          startIcon={<DownloadIcon />}
-                          onClick={() => downloadPostImage(post, post.platform)}
-                        >
-                          Download Image
-                        </Button>
-                        {post.platform === 'whatsapp' && (
-                          <Button variant="contained" onClick={() => shareWhatsAppAll(post)}>
-                            WhatsApp All
-                          </Button>
-                        )}
-                      </Stack>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              ))}
-            </Stack>
-          )}
 
           <Divider />
           <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>

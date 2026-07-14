@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -13,12 +13,16 @@ import {
   Paper,
   Alert,
   CircularProgress,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SendIcon from '@mui/icons-material/Send';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 import axios from 'axios';
+import { authHeaders } from '../services/authApi';
 
 const API_BASE_URL = process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
 
@@ -42,13 +46,35 @@ export default function EmailPage() {
   const [emailError, setEmailError] = useState('');
   
   // Email sending state
-  const [clientEmails, setClientEmails] = useState('');
+  const [recipientGroups, setRecipientGroups] = useState([]);
+  const [selectedGroupIds, setSelectedGroupIds] = useState([]);
+  const [loadingGroups, setLoadingGroups] = useState(true);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [sendSuccess, setSendSuccess] = useState('');
   const [sendError, setSendError] = useState('');
   
   // Copy state
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const loadRecipientGroups = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/email-recipient-groups`, { headers: authHeaders() });
+        setRecipientGroups(res.data || []);
+      } catch (error) {
+        setSendError(getApiErrorMessage(error, 'Could not load recipient groups.'));
+      } finally {
+        setLoadingGroups(false);
+      }
+    };
+    loadRecipientGroups();
+  }, []);
+
+  const toggleGroup = (groupId) => {
+    setSelectedGroupIds((current) => (
+      current.includes(groupId) ? current.filter((id) => id !== groupId) : [...current, groupId]
+    ));
+  };
 
   const generateEmail = async () => {
     if (!emailIdea.trim()) {
@@ -63,7 +89,7 @@ export default function EmailPage() {
     try {
       const res = await axios.post(`${API_BASE_URL}/generate-email`, {
         idea: emailIdea,
-      });
+      }, { headers: authHeaders() });
 
       setEmail(res.data.email || { subject: res.data.subject, body: res.data.body });
       setEmailError('');
@@ -76,8 +102,8 @@ export default function EmailPage() {
   };
 
   const sendEmails = async () => {
-    if (!clientEmails.trim()) {
-      setSendError('Please enter at least one email address');
+    if (selectedGroupIds.length === 0) {
+      setSendError('Please select at least one recipient group');
       return;
     }
 
@@ -91,24 +117,14 @@ export default function EmailPage() {
     setSendSuccess('');
 
     try {
-      const emailList = clientEmails
-        .split(',')
-        .map((e) => e.trim())
-        .filter((e) => e.length > 0);
-
-      if (emailList.length === 0) {
-        setSendError('Please enter valid email addresses');
-        return;
-      }
-
-      await axios.post(`${API_BASE_URL}/send-email`, {
-        recipients: emailList,
+      const res = await axios.post(`${API_BASE_URL}/send-email`, {
+        groupIds: selectedGroupIds,
         subject: email.subject,
         body: email.body,
-      });
+      }, { headers: authHeaders() });
 
-      setSendSuccess(`✅ Emails sent successfully to ${emailList.length} recipient(s)!`);
-      setClientEmails('');
+      setSelectedGroupIds([]);
+      setSendSuccess(`Emails sent successfully to ${res.data.count} recipient(s).`);
       setEmail(null);
       setEmailIdea('');
     } catch (error) {
@@ -329,22 +345,29 @@ export default function EmailPage() {
                   Send Email
                 </Typography>
                 <Stack spacing={2.5}>
-                  <TextField
-                    label="Recipient Email Addresses"
-                    placeholder="example@email.com, another@email.com"
-                    value={clientEmails}
-                    onChange={(e) => setClientEmails(e.target.value)}
-                    fullWidth
-                    multiline
-                    rows={2}
-                    variant="outlined"
-                    helperText="Enter emails separated by commas"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2,
-                      },
-                    }}
-                  />
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                      Choose recipient groups
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Groups update automatically as new users complete their profiles.
+                    </Typography>
+                    {loadingGroups ? (
+                      <CircularProgress size={22} sx={{ display: 'block', mt: 2 }} />
+                    ) : recipientGroups.length === 0 ? (
+                      <Alert severity="info" sx={{ mt: 1.5 }}>No matching recipient groups are available yet.</Alert>
+                    ) : (
+                      <FormGroup sx={{ mt: 1.25 }}>
+                        {recipientGroups.map((group) => (
+                          <FormControlLabel
+                            key={group.id}
+                            control={<Checkbox checked={selectedGroupIds.includes(group.id)} onChange={() => toggleGroup(group.id)} />}
+                            label={`${group.label} (${group.recipientCount} recipient${group.recipientCount === 1 ? '' : 's'})`}
+                          />
+                        ))}
+                      </FormGroup>
+                    )}
+                  </Box>
 
                   {sendError && (
                     <Alert severity="error">{sendError}</Alert>
