@@ -366,10 +366,15 @@ export default function WebsiteMarketingPage() {
         phone: phone || undefined,
       });
       setWebsite(w);
+      // Automatically publish to avoid confusing 2-step process
+      setPublishing(true);
+      const pub = await publishWebsite(token, w.id);
+      setWebsite(pub);
     } catch (e) {
-      setError(e.message || 'Generation failed. Please try again.');
+      setError(e.message || 'Action failed. Please try again.');
     } finally {
       setGenerating(false);
+      setPublishing(false);
     }
   };
 
@@ -599,7 +604,7 @@ export default function WebsiteMarketingPage() {
                     fullWidth
                     variant="contained"
                     size="large"
-                    startIcon={generating ? <CircularProgress size={18} color="inherit" /> : <AutoAwesomeIcon />}
+                    startIcon={(generating || publishing) ? <CircularProgress size={18} color="inherit" /> : <AutoAwesomeIcon />}
                     disabled={generating || publishing}
                     onClick={handleGenerate}
                     sx={{
@@ -612,22 +617,8 @@ export default function WebsiteMarketingPage() {
                       '&:hover': { background: `linear-gradient(135deg,#0f766e,${primaryColor || '#0f766e'})` },
                     }}
                   >
-                    {generating ? 'Generating…' : hasDraft ? 'Regenerate Website' : 'Generate Website'}
+                    {generating ? 'Generating Content…' : publishing ? 'Publishing Live…' : hasDraft ? 'Save & Publish Changes' : 'Generate & Publish Website'}
                   </Button>
-
-                  {hasDraft && (
-                    <Button
-                      fullWidth
-                      variant="text"
-                      size="small"
-                      startIcon={<RefreshIcon />}
-                      disabled={generating}
-                      onClick={handleGenerate}
-                      sx={{ mt: 1, borderRadius: 2, color: 'text.secondary' }}
-                    >
-                      Re-generate with new settings
-                    </Button>
-                  )}
                 </CardContent>
               </Card>
             </Grid>
@@ -791,7 +782,6 @@ export default function WebsiteMarketingPage() {
                     }}
                   >
                     <CardContent sx={{ p: 3.5 }}>
-                      {isPublished ? (
                         <Stack spacing={2}>
                           <Stack direction="row" alignItems="center" spacing={1}>
                             <CheckCircleIcon sx={{ color: '#22C55E', fontSize: 24 }} />
@@ -844,56 +834,7 @@ export default function WebsiteMarketingPage() {
                               </Tooltip>
                             </Stack>
                           </Box>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<RefreshIcon />}
-                            disabled={publishing || generating}
-                            onClick={handlePublish}
-                            sx={{ alignSelf: 'flex-start', borderRadius: 2 }}
-                          >
-                            Re-publish (apply latest changes)
-                          </Button>
                         </Stack>
-                      ) : (
-                        <Stack spacing={2}>
-                          <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                            Ready to publish
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                            Your website draft is ready. Click Publish to make it live on our platform. Your site will be accessible at:
-                          </Typography>
-                          <Box
-                            sx={{
-                              p: 1.5,
-                              borderRadius: 2,
-                              background: mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                              fontFamily: 'monospace',
-                              fontSize: '0.85rem',
-                              color: 'text.secondary',
-                            }}
-                          >
-                            {`[platform-url]${publicPath}`}
-                          </Box>
-                          <Button
-                            variant="contained"
-                            size="large"
-                            startIcon={publishing ? <CircularProgress size={18} color="inherit" /> : <PublishIcon />}
-                            disabled={publishing || generating}
-                            onClick={handlePublish}
-                            sx={{
-                              borderRadius: 3,
-                              py: 1.5,
-                              fontWeight: 700,
-                              background: 'linear-gradient(135deg,#0F766E,#0D9488)',
-                              boxShadow: '0 10px 24px rgba(15,118,110,0.28)',
-                              '&:hover': { background: 'linear-gradient(135deg,#0D9488,#0F766E)' },
-                            }}
-                          >
-                            {publishing ? 'Publishing…' : 'Publish Website'}
-                          </Button>
-                        </Stack>
-                      )}
                     </CardContent>
                   </Card>
                 )}
