@@ -8,10 +8,12 @@ import {
   Chip,
   Container,
   Divider,
+  IconButton,
   MenuItem,
   Paper,
   Stack,
   TextField,
+  Tooltip,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -19,15 +21,29 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import LaunchIcon from '@mui/icons-material/Launch';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ShareIcon from '@mui/icons-material/Share';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import TwitterIcon from '@mui/icons-material/Twitter';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 import { fetchBusinesses } from '../services/businessApi';
-import { authHeaders } from '../services/authApi';
 
 const API_BASE_URL = process.env.REACT_APP_SPRING_BACKEND_BASE_URL || 'http://localhost:8083';
 //const ADS_GENERATOR_URL = 'https://atxp.pics/chat';
+
+const platformShareIcons = {
+  facebook: FacebookIcon,
+  instagram: InstagramIcon,
+  twitter: TwitterIcon,
+  linkedin: LinkedInIcon,
+  whatsapp: WhatsAppIcon,
+};
+
 
 const platformOptions = [
   { value: 'facebook', label: 'Facebook' },
@@ -185,6 +201,7 @@ export default function SocialPage() {
   const [platform, setPlatform] = useState('facebook');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [ad, setAd] = useState(null);
+  const [platformAds, setPlatformAds] = useState({});
   const [loadingAd, setLoadingAd] = useState(false);
   const [adError, setAdError] = useState('');
   const [adVisuals, setAdVisuals] = useState({});
@@ -277,7 +294,9 @@ export default function SocialPage() {
           website: websiteUrl,
         },
         {
-          headers: authHeaders(token),
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -422,6 +441,144 @@ export default function SocialPage() {
     const link = document.createElement('a');
     link.href = dataUrl;
     link.download = `${postPlatform}-post.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const extractAdForPlatform = (allAds, platform) => {
+    if (!allAds) return '';
+    const text = allAds.replace(/\r\n/g, '\n');
+    const lines = text.split('\n');
+    let platformLines = [];
+    let recording = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim().toLowerCase();
+      let isHeader = false;
+      let detectedPlatform = null;
+
+      if (line.includes('facebook') || line.includes('fb ad')) {
+        isHeader = true;
+        detectedPlatform = 'facebook';
+      } else if (line.includes('instagram') || line.includes('ig ad') || line.includes('insta')) {
+        isHeader = true;
+        detectedPlatform = 'instagram';
+      } else if (line.includes('tiktok') || line.includes('tik tok')) {
+        isHeader = true;
+        detectedPlatform = 'tiktok';
+      } else if (line.includes('whatsapp') || line.includes('wa ad')) {
+        isHeader = true;
+        detectedPlatform = 'whatsapp';
+      } else if (line.includes('twitter') || line.includes('x ad')) {
+        isHeader = true;
+        detectedPlatform = 'twitter';
+      } else if (line.includes('linkedin') || line.includes('li ad')) {
+        isHeader = true;
+        detectedPlatform = 'linkedin';
+      } else if (line.includes('headline') || line.includes('hashtag') || (line.startsWith('---') && i > 0 && lines[i-1].trim() === '')) {
+        isHeader = true;
+        detectedPlatform = 'other';
+      }
+
+      if (isHeader) {
+        if (detectedPlatform === platform) {
+          recording = true;
+          platformLines = [];
+        } else {
+          recording = false;
+        }
+        continue;
+      }
+
+      if (recording && line.startsWith('---')) {
+        continue;
+      }
+
+      if (recording) {
+        platformLines.push(lines[i]);
+      }
+    }
+
+    const result = platformLines.join('\n').trim();
+    return result || allAds;
+  };
+
+  const buildAdShareText = (platform) => {
+    let adText = ad?.generatedAds || '';
+    if (platform) {
+      adText = extractAdForPlatform(adText, platform);
+    }
+    const parts = [adText];
+    if (websiteUrl.trim()) parts.push(websiteUrl.trim());
+    return parts.filter(Boolean).join('\n\n');
+  };
+
+  const openAdShare = async (sharePlatform) => {
+    if (!ad?.generatedAds) return;
+    const account = normalizeHandle(socialAccounts[sharePlatform], sharePlatform);
+    const text = buildAdShareText(sharePlatform);
+    const encoded = encodeURIComponent(text);
+
+    await copyText(text);
+
+    if (sharePlatform === 'facebook') {
+      const target = account ? `https://www.facebook.com/${account}` : 'https://www.facebook.com';
+      window.open(target, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    if (sharePlatform === 'twitter') {
+      const via = account ? `&via=${encodeURIComponent(account)}` : '';
+      window.open(`https://twitter.com/intent/tweet?text=${encoded}${via}`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    if (sharePlatform === 'whatsapp') {
+      const number = normalizeWhatsAppNumber(socialAccounts.whatsapp);
+      const waBase = number ? `https://wa.me/${number}` : 'https://wa.me/';
+      window.open(`${waBase}?text=${encoded}`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    if (sharePlatform === 'linkedin') {
+      const target = account ? `https://www.linkedin.com/in/${account}` : 'https://www.linkedin.com/feed/';
+      window.open(target, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    if (sharePlatform === 'instagram') {
+      const target = account ? `https://www.instagram.com/${account}/` : 'https://www.instagram.com/';
+      window.open(target, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const shareAdWhatsAppAll = async () => {
+    if (!ad?.generatedAds) return;
+    const text = buildAdShareText('whatsapp');
+    const encoded = encodeURIComponent(text);
+    const number = normalizeWhatsAppNumber(socialAccounts.whatsapp);
+    const groupLinks = parseGroupLinks(socialAccounts.whatsappGroups);
+
+    await copyText(text);
+
+    if (number) {
+      window.open(`https://wa.me/${number}?text=${encoded}`, '_blank', 'noopener,noreferrer');
+    }
+
+    window.open(`https://wa.me/?text=${encoded}`, '_blank', 'noopener,noreferrer');
+
+    groupLinks.slice(0, 3).forEach((link) => {
+      window.open(link, '_blank', 'noopener,noreferrer');
+    });
+
+    window.open('https://web.whatsapp.com/', '_blank', 'noopener,noreferrer');
+  };
+
+  const downloadAdVisual = (platformName, image) => {
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = `${platformName}-ad.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -586,6 +743,48 @@ whiteSpace:"pre-wrap"
 
 </Paper>
 
+<Box sx={{ mt: 2 }}>
+  <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
+    Share this ad
+  </Typography>
+  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
+    {platformOptions.map((option) => {
+      const Icon = platformShareIcons[option.value] || ShareIcon;
+      const account = normalizeHandle(socialAccounts[option.value], option.value);
+      const tooltip = account
+        ? `Share to ${option.label} (auto-filled: ${account})`
+        : `Share to ${option.label} (add your ${option.label} link in Business Profile to auto-fill)`;
+      return (
+        <Tooltip key={option.value} title={tooltip}>
+          <IconButton
+            onClick={() => openAdShare(option.value)}
+            sx={{
+              border: '1px solid',
+              borderColor: account ? 'success.main' : 'divider',
+              color: account ? 'success.main' : 'text.secondary',
+            }}
+          >
+            <Icon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      );
+    })}
+    <Tooltip title="Share to WhatsApp number and saved WhatsApp groups">
+      <Button
+        size="small"
+        variant="outlined"
+        startIcon={<WhatsAppIcon fontSize="small" />}
+        onClick={shareAdWhatsAppAll}
+      >
+        WhatsApp (all)
+      </Button>
+    </Tooltip>
+  </Stack>
+  <Typography variant="caption" sx={{ color: theme.palette.text.secondary, display: 'block', mt: 0.5 }}>
+    Platform buttons are auto-filled from the social links saved in your Business Profile. The ad text is copied to your clipboard automatically when you share.
+  </Typography>
+</Box>
+
 </Box>
                       <Box sx={{ mt: 3 }}>
                         <Typography variant="h6" fontWeight="bold" mb={1}>Professional Visual Ads</Typography>
@@ -598,7 +797,25 @@ whiteSpace:"pre-wrap"
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 2, flexWrap: 'wrap' }}>
                           {Object.entries(adVisuals).map(([platformName, image]) => (
                             <Box key={platformName} sx={{ width: { xs: '100%', sm: 190 } }}>
-                              <img src={image} alt={`${platformName} ad`} style={{ width: '100%', borderRadius: 8, display: 'block' }} />
+                              <Box sx={{ position: 'relative' }}>
+                                <img src={image} alt={`${platformName} ad`} style={{ width: '100%', borderRadius: 8, display: 'block' }} />
+                                <Tooltip title="Download this image to attach when sharing">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => downloadAdVisual(platformName, image)}
+                                    sx={{
+                                      position: 'absolute',
+                                      top: 6,
+                                      right: 6,
+                                      bgcolor: 'rgba(0,0,0,0.55)',
+                                      color: '#fff',
+                                      '&:hover': { bgcolor: 'rgba(0,0,0,0.75)' },
+                                    }}
+                                  >
+                                    <DownloadIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
                               <Typography variant="caption" sx={{ textTransform: 'capitalize' }}>{platformName.replace('_', ' / ')}</Typography>
                             </Box>
                           ))}

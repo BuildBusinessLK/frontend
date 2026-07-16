@@ -56,6 +56,28 @@ export default function EmailPage() {
   // Copy state
   const [copied, setCopied] = useState(false);
 
+  // Seeding state
+  const [seedingCustomers, setSeedingCustomers] = useState(false);
+  const [seedSuccessMsg, setSeedSuccessMsg] = useState('');
+
+  const seedSampleCustomers = async () => {
+    setSeedingCustomers(true);
+    setSeedSuccessMsg('');
+    setSendError('');
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/customers/seed`, {}, { headers: authHeaders() });
+      setSeedSuccessMsg(`Generated ${res.data.count} realistic customers matching your ${res.data.sector} sector!`);
+      setLoadingGroups(true);
+      const groupsRes = await axios.get(`${API_BASE_URL}/email-recipient-groups`, { headers: authHeaders() });
+      setRecipientGroups(groupsRes.data || []);
+    } catch (error) {
+      setSendError(getApiErrorMessage(error, 'Could not seed sample customers. Please fill in your Business Profile first.'));
+    } finally {
+      setSeedingCustomers(false);
+      setLoadingGroups(false);
+    }
+  };
+
   useEffect(() => {
     const loadRecipientGroups = async () => {
       try {
@@ -346,16 +368,51 @@ export default function EmailPage() {
                 </Typography>
                 <Stack spacing={2.5}>
                   <Box>
-                    <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
-                      Choose recipient groups
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Groups update automatically as new users complete their profiles.
-                    </Typography>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                          Choose recipient groups
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Select one or more recipient groups for bulk email delivery.
+                        </Typography>
+                      </Box>
+                      <Button
+                        size="small"
+                        onClick={seedSampleCustomers}
+                        disabled={seedingCustomers}
+                        sx={{
+                          borderRadius: 2,
+                          textTransform: 'none',
+                          fontWeight: 700,
+                          border: mode === 'dark' ? '1px solid rgba(56,189,248,0.3)' : '1px solid rgba(3,105,161,0.3)',
+                          color: mode === 'dark' ? '#87CEEB' : '#0369A1',
+                          '&:hover': {
+                            background: mode === 'dark' ? 'rgba(56,189,248,0.08)' : 'rgba(3,105,161,0.05)',
+                          }
+                        }}
+                      >
+                        {seedingCustomers ? (
+                          <>
+                            <CircularProgress size={14} sx={{ mr: 1 }} />
+                            Generating...
+                          </>
+                        ) : 'Generate Sample Customers'}
+                      </Button>
+                    </Stack>
+
+                    {seedSuccessMsg && (
+                      <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{seedSuccessMsg}</Alert>
+                    )}
+
                     {loadingGroups ? (
                       <CircularProgress size={22} sx={{ display: 'block', mt: 2 }} />
                     ) : recipientGroups.length === 0 ? (
-                      <Alert severity="info" sx={{ mt: 1.5 }}>No matching recipient groups are available yet.</Alert>
+                      <Box sx={{ mt: 1.5 }}>
+                        <Alert severity="info" sx={{ borderRadius: 2 }}>
+                          No customer groups are available. Click <strong>Generate Sample Customers</strong> above to instantly populate the database with realistic customer segments matching your business profile!
+                        </Alert>
+                      </Box>
                     ) : (
                       <FormGroup sx={{ mt: 1.25 }}>
                         {recipientGroups.map((group) => (

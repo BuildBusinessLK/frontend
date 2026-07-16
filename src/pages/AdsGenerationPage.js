@@ -19,6 +19,7 @@ const AdsGenerationPage = () => {
   const [loadingVisuals, setLoadingVisuals] = useState(false);
   const [revision, setRevision] = useState('');
   const [conversation, setConversation] = useState([]);
+  const [activeType, setActiveType] = useState('text');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -32,6 +33,8 @@ const AdsGenerationPage = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setVisuals({});
+    setActiveType('text');
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/ads/generate`, {
@@ -79,6 +82,7 @@ const AdsGenerationPage = () => {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || 'Failed to generate visual ads');
       setVisuals(data.images || {});
+      setActiveType('visual');
       return data;
     } finally {
       setLoadingVisuals(false);
@@ -88,56 +92,124 @@ const AdsGenerationPage = () => {
   const handleRevision = async (e) => {
     e.preventDefault();
     const instruction = revision.trim();
-    if (!instruction || !response?.generatedAds) return;
+    if (!instruction) return;
     setConversation((items) => [...items, { role: 'user', text: instruction }]);
     setRevision('');
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/ads/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({
-          idea: `${formData.idea}\n\nCurrent ad copy:\n${response.generatedAds}\n\nEdit request: ${instruction}`,
-          product_type: formData.productType,
-          target_audience: formData.targetAudience,
-          tone: formData.tone,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.generatedAds) throw new Error('Could not apply that change');
-      setResponse((current) => ({ ...current, generatedAds: data.generatedAds, generated_ads: data.generatedAds }));
-      if (Object.keys(visuals).length) await generateVisuals(instruction);
-      setConversation((items) => [...items, { role: 'assistant', text: 'Updated the ad copy and regenerated the visual creative where applicable.' }]);
-    } catch (err) {
-      setConversation((items) => [...items, { role: 'assistant', text: err.message || 'I could not apply that change.' }]);
+
+    if (activeType === 'visual') {
+      try {
+        setVisuals({}); // Clear previous visuals before regenerating
+        await generateVisuals(instruction);
+        setConversation((items) => [...items, { role: 'assistant', text: 'Regenerated the visual creative based on your instruction.' }]);
+      } catch (err) {
+        setConversation((items) => [...items, { role: 'assistant', text: err.message || 'I could not regenerate the visuals.' }]);
+      }
+    } else {
+      if (!response?.generatedAds) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/ads/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({
+            idea: `${formData.idea}\n\nCurrent ad copy:\n${response.generatedAds}\n\nEdit request: ${instruction}`,
+            product_type: formData.productType,
+            target_audience: formData.targetAudience,
+            tone: formData.tone,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.generatedAds) throw new Error('Could not apply that change');
+        setResponse((current) => ({ ...current, generatedAds: data.generatedAds, generated_ads: data.generatedAds }));
+        setConversation((items) => [...items, { role: 'assistant', text: 'Updated the ad copy.' }]);
+      } catch (err) {
+        setConversation((items) => [...items, { role: 'assistant', text: err.message || 'I could not apply that change.' }]);
+      }
     }
   };
 
+  const extractAdForPlatform = (allAds, platform) => {
+    if (!allAds) return '';
+    const text = allAds.replace(/\r\n/g, '\n');
+    const lines = text.split('\n');
+    let platformLines = [];
+    let recording = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim().toLowerCase();
+      let isHeader = false;
+      let detectedPlatform = null;
+
+      if (line.includes('facebook') || line.includes('fb ad')) {
+        isHeader = true;
+        detectedPlatform = 'facebook';
+      } else if (line.includes('instagram') || line.includes('ig ad') || line.includes('insta')) {
+        isHeader = true;
+        detectedPlatform = 'instagram';
+      } else if (line.includes('tiktok')) {
+        isHeader = true;
+        detectedPlatform = 'tiktok';
+      } else if (line.includes('whatsapp') || line.includes('wa ad')) {
+        isHeader = true;
+        detectedPlatform = 'whatsapp';
+      } else if (line.includes('headline') || line.includes('hashtag') || (line.startsWith('---') && i > 0 && lines[i-1].trim() === '')) {
+        isHeader = true;
+        detectedPlatform = 'other';
+      }
+
+      if (isHeader) {
+        if (detectedPlatform === platform) {
+          recording = true;
+          platformLines = [];
+        } else {
+          recording = false;
+        }
+        continue;
+      }
+
+      if (recording && line.startsWith('---')) {
+        continue;
+      }
+
+      if (recording) {
+        platformLines.push(lines[i]);
+      }
+    }
+
+    const result = platformLines.join('\n').trim();
+    return result || allAds;
+  };
+
   const handleShare = (platform) => {
-    if (!response || !response.share_links) return;
+    const allAds = response?.generatedAds || response?.generated_ads || '';
+    if (!allAds) return;
 
-    const links = response.share_links;
-    let url = '';
+    const platformAdText = extractAdForPlatform(allAds, platform);
 
-    switch(platform) {
-      case 'facebook':
-        url = links.facebook;
-        break;
-      case 'instagram':
-        alert('Please copy the generated ads and share manually on Instagram');
-        return;
-      case 'tiktok':
-        alert('Please share the generated ads on TikTok');
-        return;
-      case 'whatsapp':
-        url = links.whatsapp;
-        break;
-      default:
-        return;
-    }
+    navigator.clipboard.writeText(platformAdText).then(() => {
+      let url = '';
+      switch(platform) {
+        case 'facebook':
+          url = 'https://www.facebook.com/';
+          break;
+        case 'instagram':
+          url = 'https://www.instagram.com/';
+          break;
+        case 'tiktok':
+          url = 'https://www.tiktok.com/';
+          break;
+        case 'whatsapp':
+          url = `https://api.whatsapp.com/send?text=${encodeURIComponent(platformAdText)}`;
+          break;
+        default:
+          return;
+      }
 
-    if (url) {
+      alert(`Copied ${platform.charAt(0).toUpperCase() + platform.slice(1)} ad text to clipboard! Opening ${platform}...`);
       window.open(url, '_blank');
-    }
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+      alert('Failed to copy ad text automatically. Please copy it manually.');
+    });
   };
 
   const copyToClipboard = (text) => {
@@ -236,42 +308,40 @@ const AdsGenerationPage = () => {
               <div className="prompt-box">
                 <h3>Generated Prompt</h3>
                 <p>{response.prompt}</p>
-                <button 
-                  className="copy-btn"
-                  onClick={() => copyToClipboard(response.prompt)}
-                >
-                  📋 Copy Prompt
-                </button>
               </div>
 
-              <div className="ads-box">
-                <h3>Ad Variations</h3>
-                <div className="ads-content-display">
-                  {response.generatedAds || response.generated_ads}
+              {activeType === 'text' && (
+                <div className="ads-box">
+                  <h3>Ad Variations</h3>
+                  <div className="ads-content-display">
+                    {response.generatedAds || response.generated_ads}
+                  </div>
+                  <div style={{ marginTop: '15px' }}>
+                    <button className="copy-btn" onClick={() => generateVisuals()} disabled={loadingVisuals}>
+                      {loadingVisuals ? 'Creating visual ads...' : '🎨 Generate Visual Ads'}
+                    </button>
+                  </div>
                 </div>
-                <button 
-                  className="copy-btn"
-                  onClick={() => copyToClipboard(response.generated_ads)}
-                >
-                  📋 Copy All Ads
-                </button>
-              </div>
+              )}
 
-              <div className="ads-box">
-                <h3>Professional Visual Ads</h3>
-                <p>Generate image creatives sized for Facebook/LinkedIn, Instagram/WhatsApp, and TikTok. The text ad remains available above.</p>
-                <button className="copy-btn" onClick={() => generateVisuals()} disabled={loadingVisuals}>
-                  {loadingVisuals ? 'Creating visual ads...' : 'Generate Visual Ads'}
-                </button>
-                <div className="ad-visual-grid">
-                  {Object.entries(visuals).map(([platform, image]) => (
-                    <figure key={platform}>
-                      <img src={image} alt={`${platform} advertisement`} />
-                      <figcaption>{platform.replace('_', ' / ')}</figcaption>
-                    </figure>
-                  ))}
+              {activeType === 'visual' && (
+                <div className="ads-box">
+                  <h3>Professional Visual Ads</h3>
+                  <div className="ad-visual-grid">
+                    {Object.entries(visuals).map(([platform, image]) => (
+                      <figure key={platform}>
+                        <img src={image} alt={`${platform} advertisement`} />
+                        <figcaption>{platform.replace('_', ' / ')}</figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: '15px' }}>
+                    <button className="copy-btn" onClick={() => setActiveType('text')}>
+                      📝 Switch to Text Ad
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="ads-box">
                 <h3>Ask AI to Edit Your Ad</h3>
