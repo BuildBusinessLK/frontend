@@ -90,17 +90,67 @@ const PRESET_COLORS = [
   '#94a3b8',
 ];
 
+function isValidHex(hex) {
+  return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(hex);
+}
+
+function normalizeHex(raw) {
+  let h = raw.trim();
+  if (!h.startsWith('#')) h = '#' + h;
+  return h;
+}
+
 function ColorInput({ label, value, onChange }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
+  // Local draft for the text input — tracks what user is typing
+  const [hexDraft, setHexDraft] = useState(value || '');
+
+  // Keep draft in sync when external value changes (e.g. on load)
+  useEffect(() => {
+    setHexDraft(value || '');
+  }, [value]);
+
   const handleOpen = (event) => {
     setAnchorEl(event.currentTarget);
+    setHexDraft(value || '');
   };
 
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const applyColor = (hex) => {
+    onChange({ target: { value: hex } });
+  };
+
+  const handleHexInput = (e) => {
+    let raw = e.target.value;
+    // Auto-prepend # if user typed without it
+    if (raw && !raw.startsWith('#')) raw = '#' + raw;
+    setHexDraft(raw);
+    const normalized = normalizeHex(raw);
+    if (isValidHex(normalized)) {
+      applyColor(normalized);
+    }
+  };
+
+  const handleHexBlur = () => {
+    const normalized = normalizeHex(hexDraft);
+    if (isValidHex(normalized)) {
+      setHexDraft(normalized);
+      applyColor(normalized);
+    } else {
+      // Revert draft to last valid value
+      setHexDraft(value || '');
+    }
+  };
+
+  const hexIsValid = isValidHex(normalizeHex(hexDraft));
+
+  // Preview colour: show typed colour if valid, else fall back to saved value
+  const previewColor = hexIsValid ? normalizeHex(hexDraft) : (value || '#000000');
 
   return (
     <>
@@ -125,9 +175,10 @@ function ColorInput({ label, value, onChange }) {
               width: 18,
               height: 18,
               borderRadius: '50%',
-              background: value || '#000',
-              border: '1px solid rgba(0,0,0,0.12)',
+              background: previewColor,
+              border: '1px solid rgba(0,0,0,0.15)',
               flexShrink: 0,
+              transition: 'background 0.15s ease',
             }}
           />
           <Typography variant="body2" sx={{ color: 'text.primary' }}>
@@ -142,8 +193,45 @@ function ColorInput({ label, value, onChange }) {
         onClose={handleClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        PaperProps={{ sx: { p: 1.5, minWidth: 260, borderRadius: 3 } }}
+        PaperProps={{ sx: { p: 2, minWidth: 272, borderRadius: 3 } }}
       >
+        {/* ── Hex input row ── */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+          {/* Live preview dot */}
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              flexShrink: 0,
+              background: previewColor,
+              border: '2px solid',
+              borderColor: hexIsValid ? 'transparent' : 'error.main',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.14)',
+              transition: 'background 0.15s ease, border-color 0.15s ease',
+            }}
+          />
+          <TextField
+            size="small"
+            fullWidth
+            value={hexDraft}
+            onChange={handleHexInput}
+            onBlur={handleHexBlur}
+            error={!hexIsValid && hexDraft.length > 1}
+            placeholder="#000000"
+            inputProps={{ maxLength: 7, style: { fontFamily: 'monospace', letterSpacing: '0.05em' } }}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+            helperText={!hexIsValid && hexDraft.length > 1 ? 'Enter a valid hex e.g. #ff6b35' : ''}
+            FormHelperTextProps={{ sx: { mt: 0.25 } }}
+          />
+        </Box>
+
+        {/* ── Divider ── */}
+        <Typography variant="caption" sx={{ display: 'block', color: 'text.disabled', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', mb: 1 }}>
+          Presets
+        </Typography>
+
+        {/* ── Preset swatches ── */}
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 1.25 }}>
           {PRESET_COLORS.map((preset) => {
             const selected = preset.toLowerCase() === (value || '').toLowerCase();
@@ -153,20 +241,23 @@ function ColorInput({ label, value, onChange }) {
                   component="button"
                   type="button"
                   onClick={() => {
-                    onChange({ target: { value: preset } });
+                    setHexDraft(preset);
+                    applyColor(preset);
                     handleClose();
                   }}
                   sx={{
                     width: 36,
                     height: 36,
                     borderRadius: '50%',
-                    border: selected ? '2px solid' : '2px solid transparent',
+                    border: selected ? '2.5px solid' : '2px solid transparent',
                     borderColor: selected ? 'primary.main' : 'transparent',
+                    outline: selected ? '2px solid' : 'none',
+                    outlineColor: selected ? 'primary.light' : 'transparent',
                     background: preset,
                     cursor: 'pointer',
                     transition: 'transform 0.15s ease, border-color 0.15s ease',
                     '&:hover': {
-                      transform: 'scale(1.05)',
+                      transform: 'scale(1.12)',
                     },
                   }}
                 />
