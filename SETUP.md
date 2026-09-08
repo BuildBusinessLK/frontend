@@ -112,7 +112,7 @@ git checkout dev-yourname
 
 ## 🚀 Step 4 — Set up each repo
 
-Open **4 separate terminal tabs/windows** — one for each repo.
+Open **separate terminal tabs/windows** — one for each repo.
 
 ---
 
@@ -125,7 +125,7 @@ cd BuildBusinessLK/frontend
 npm install
 
 # Start the development server
-npm run dev
+npm start
 ```
 
 The app will be available at: **http://localhost:3000**
@@ -135,6 +135,8 @@ The app will be available at: **http://localhost:3000**
 ### ☕ Backend (Spring Boot)
 
 The backend runs on **port 8083**.
+
+> ⚠️ **Important:** The backend source is one level deeper — always `cd` into `backend/backend/`, not just `backend/`.
 
 **Option A — IntelliJ IDEA (recommended)**
 1. Open IntelliJ IDEA
@@ -241,9 +243,44 @@ The AI service needs **two things running** at the same time — in two separate
 2. Open a terminal and run:
 
 ```bash
-# Download the Llama 3 model (this is a large download ~4GB, do it on good WiFi)
+# Download the Llama 3 model (~4 GB download — do this on good WiFi)
 ollama pull llama3
 ```
+
+#### Then: Set up the Python virtual environment (once only)
+
+```bash
+cd BuildBusinessLK/ai-service
+
+# Create a virtual environment inside the repo
+python3 -m venv .venv
+
+# Activate it (Mac/Linux)
+source .venv/bin/activate
+
+# Install all Python dependencies into the venv
+.venv/bin/pip install -r requirements.txt
+```
+
+#### Then: Build the vector database (once only — or after changing data/ files)
+
+This reads all `.txt` files in `data/` and creates the FAISS vector index the AI uses for retrieval:
+
+```bash
+# Still inside BuildBusinessLK/ai-service/
+.venv/bin/python rag/ingest.py
+```
+
+You should see:
+```
+Loading documents...
+Splitting documents...
+Loaded X documents and created Y chunks.
+Creating embeddings & saving FAISS index...
+Done. Vector DB created.
+```
+
+> ⚠️ Re-run `rag/ingest.py` any time you add or edit files inside `data/`. The vector index must match the current data.
 
 #### Then: Start Ollama (Terminal 1)
 
@@ -251,21 +288,20 @@ ollama pull llama3
 ollama serve
 ```
 
-> Leave this terminal open. Ollama must keep running.
+> Leave this terminal open. Ollama must keep running in the background.
 
 #### Then: Start the AI service (Terminal 2)
 
 ```bash
 cd BuildBusinessLK/ai-service
 
-# Install Python dependencies (only once)
-pip install -r requirements.txt
-
-# Start the FastAPI server
-uvicorn app:app --reload
+# Start the FastAPI server using the venv Python
+.venv/bin/python -m uvicorn app:app --reload
 ```
 
 The AI service will be available at: **http://localhost:8000**
+
+> ⚠️ Always use `.venv/bin/python -m uvicorn` (not just `uvicorn`) to ensure the venv packages are used, not your system Python.
 
 ---
 
@@ -302,7 +338,8 @@ Each repo has a `.env` file in its root folder. These files contain **secret key
 | Repo | File to create |
 |---|---|
 | `frontend/` | `.env` |
-| `backend/backend/src/main/resources/` | `application.properties` |
+| `backend/backend/` | `.env` |
+| `backend/backend/src/main/resources/` | `application-dev.properties` |
 | `ai-service/` | `.env` |
 | `website-templates/templates/modern-business-template/` | `.env.local` |
 
@@ -314,13 +351,55 @@ Once you receive the file contents from Havindu, create the file in the correct 
 
 You need **5 terminal windows** open at the same time:
 
-| Terminal | Command | URL |
-|---|---|---|
-| 1 — Ollama | `ollama serve` | (internal) |
-| 2 — AI Service | `uvicorn app:app --reload` in `ai-service/` | http://localhost:8000 |
-| 3 — Backend | `mvn spring-boot:run` in `backend/backend/` | http://localhost:8083 |
-| 4 — Frontend | `npm run dev` in `frontend/` | http://localhost:3000 |
-| 5 — Templates | `npm run dev` in `website-templates/.../modern-business-template/` | http://localhost:3001 |
+| Terminal | Command | Directory | URL |
+|---|---|---|---|
+| 1 — Ollama | `ollama serve` | anywhere | (internal — port 11434) |
+| 2 — AI Service | `.venv/bin/python -m uvicorn app:app --reload` | `ai-service/` | http://localhost:8000 |
+| 3 — Backend | `mvn spring-boot:run` | `backend/backend/` ⚠️ | http://localhost:8083 |
+| 4 — Frontend | `npm start` | `frontend/` | http://localhost:3000 |
+| 5 — Templates | `npm run dev` | `website-templates/templates/modern-business-template/` ⚠️ | http://localhost:3001 |
+
+> ⚠️ Backend and website-templates both require you to be in a **subdirectory** — not the repo root.
+
+### VS Code shortcut
+
+If you open the `BuildBusinessLK/` folder in VS Code, press **`Cmd + Shift + B`** to launch all terminals automatically.
+
+---
+
+## 🆕 Fresh Clone Checklist
+
+Every time someone clones the project for the first time, run these commands in order:
+
+```bash
+# ── FRONTEND ──────────────────────────────────────────────────
+cd frontend
+npm install
+cd ..
+
+# ── AI SERVICE ────────────────────────────────────────────────
+cd ai-service
+python3 -m venv .venv
+source .venv/bin/activate
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python rag/ingest.py        # builds the FAISS vector database
+cd ..
+
+# ── WEBSITE TEMPLATES ─────────────────────────────────────────
+cd website-templates/templates/modern-business-template
+npm install
+cd ../../..
+
+# ── OLLAMA (only once ever) ───────────────────────────────────
+ollama pull llama3                    # ~4 GB download
+
+# ── BACKEND ───────────────────────────────────────────────────
+# 1. Get your .env and application-dev.properties from Havindu
+# 2. Place them in backend/backend/ and backend/backend/src/main/resources/
+# 3. Then run:
+cd backend/backend
+mvn spring-boot:run
+```
 
 ---
 
@@ -434,6 +513,9 @@ target/
 .idea/
 .DS_Store
 *.iml
+
+# AI vector database (auto-generated by rag/ingest.py — do not push)
+rag/vectorstore/
 ```
 
 > `application.properties` itself **is safe to commit** — it only contains non-secret shared config like port numbers and JPA settings. The files with your personal DB password (`application-dev.properties` and `application-prod.properties`) are what you must never push.
@@ -449,6 +531,7 @@ target/
 5. **Commit through your IDE** (IntelliJ for backend) when possible — it shows you exactly which files are staged so you don't accidentally commit sensitive files.
 6. **Ask before merging** into `development`. Always get Havindu's approval first.
 7. **Do not push `node_modules/`** — this folder can be hundreds of megabytes. It's in `.gitignore` already.
+8. **Do not push `rag/vectorstore/`** — this is auto-generated by `rag/ingest.py`. Each developer builds it locally.
 
 ---
 
@@ -457,11 +540,15 @@ target/
 | Problem | Fix |
 |---|---|
 | `npm: command not found` | Install Node.js from https://nodejs.org |
+| `npm error Missing script: "dev"` | Frontend uses `npm start`, not `npm run dev` |
 | `mvn: command not found` | Install Maven from https://maven.apache.org or use IntelliJ |
 | `ollama: command not found` | Install Ollama from https://ollama.com |
 | `pip: command not found` | Install Python 3.11+ from https://python.org |
-| Backend won't start | Check that `application.properties` exists in the correct folder |
-| AI service errors | Make sure `ollama serve` is running in a separate terminal |
+| `next: command not found` | Run `npm install` inside `website-templates/templates/modern-business-template/` first |
+| Backend won't start | Check that you're in `backend/backend/` (not just `backend/`) and `.env` exists |
+| AI chat times out | Normal — llama3 8B takes 30–60 s on local hardware. Backend timeout is set to 120 s. |
+| AI service errors on startup | Run `rag/ingest.py` first to build the vector database |
+| `ollama serve` error: address in use | Ollama is already running in the background — skip this step |
 | Port already in use | Another process is using that port — restart your computer or kill the process |
 | Merge conflict | Don't panic — message Havindu, we'll resolve it together |
 
