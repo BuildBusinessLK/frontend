@@ -393,11 +393,24 @@ export default function WebsiteMarketingPage() {
     }
   };
 
+  // ── Public site base URL resolution ─────────────────────────────────────
+  const PUBLIC_SITE_BASE_URL = (
+    process.env.REACT_APP_PUBLIC_SITE_BASE_URL ||
+    'https://website-templates-weld.vercel.app'
+  ).replace(/\/$/, '');
+
+  const formatPublishedUrl = (url) => {
+    if (!url) return '';
+    return url.replace(/^https?:\/\/localhost:3001/, PUBLIC_SITE_BASE_URL);
+  };
+
+  const effectivePublishedUrl = formatPublishedUrl(website?.publishedUrl);
+
   // ── Copy URL ────────────────────────────────────────────────────────────────
   const handleCopy = () => {
-    if (!website?.publishedUrl) return;
+    if (!effectivePublishedUrl) return;
     const copy = navigator.clipboard?.writeText
-      ? navigator.clipboard.writeText(website.publishedUrl)
+      ? navigator.clipboard.writeText(effectivePublishedUrl)
       : Promise.reject(new Error('Clipboard unavailable'));
     copy.then(() => {
       setCopied(true);
@@ -804,7 +817,7 @@ export default function WebsiteMarketingPage() {
                             }}
                           >
                             <Link
-                              href={website.publishedUrl}
+                              href={effectivePublishedUrl}
                               target="_blank"
                               rel="noreferrer"
                               sx={{
@@ -816,7 +829,7 @@ export default function WebsiteMarketingPage() {
                                 fontWeight: 600,
                               }}
                             >
-                              {website.publishedUrl}
+                              {effectivePublishedUrl}
                             </Link>
                             <Stack direction="row" spacing={0.5}>
                               <Tooltip title={copied ? 'Copied!' : 'Copy URL'}>
@@ -827,7 +840,7 @@ export default function WebsiteMarketingPage() {
                               <Tooltip title="Open site">
                                 <IconButton
                                   size="small"
-                                  onClick={() => window.open(website.publishedUrl, '_blank')}
+                                  onClick={() => window.open(effectivePublishedUrl, '_blank')}
                                 >
                                   <OpenInNewIcon fontSize="small" />
                                 </IconButton>
