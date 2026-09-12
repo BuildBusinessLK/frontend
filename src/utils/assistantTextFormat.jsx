@@ -30,7 +30,6 @@ function parseInlineSegments(line) {
       const afterStar = line.slice(em + 1);
       const close = afterStar.indexOf('*');
       if (close > 0 && !afterStar.startsWith('*')) {
-        next = em;
         kind = 'emph';
       }
     }

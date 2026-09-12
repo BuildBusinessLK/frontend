@@ -90,17 +90,67 @@ const PRESET_COLORS = [
   '#94a3b8',
 ];
 
+function isValidHex(hex) {
+  return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(hex);
+}
+
+function normalizeHex(raw) {
+  let h = raw.trim();
+  if (!h.startsWith('#')) h = '#' + h;
+  return h;
+}
+
 function ColorInput({ label, value, onChange }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
+  // Local draft for the text input — tracks what user is typing
+  const [hexDraft, setHexDraft] = useState(value || '');
+
+  // Keep draft in sync when external value changes (e.g. on load)
+  useEffect(() => {
+    setHexDraft(value || '');
+  }, [value]);
+
   const handleOpen = (event) => {
     setAnchorEl(event.currentTarget);
+    setHexDraft(value || '');
   };
 
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const applyColor = (hex) => {
+    onChange({ target: { value: hex } });
+  };
+
+  const handleHexInput = (e) => {
+    let raw = e.target.value;
+    // Auto-prepend # if user typed without it
+    if (raw && !raw.startsWith('#')) raw = '#' + raw;
+    setHexDraft(raw);
+    const normalized = normalizeHex(raw);
+    if (isValidHex(normalized)) {
+      applyColor(normalized);
+    }
+  };
+
+  const handleHexBlur = () => {
+    const normalized = normalizeHex(hexDraft);
+    if (isValidHex(normalized)) {
+      setHexDraft(normalized);
+      applyColor(normalized);
+    } else {
+      // Revert draft to last valid value
+      setHexDraft(value || '');
+    }
+  };
+
+  const hexIsValid = isValidHex(normalizeHex(hexDraft));
+
+  // Preview colour: show typed colour if valid, else fall back to saved value
+  const previewColor = hexIsValid ? normalizeHex(hexDraft) : (value || '#000000');
 
   return (
     <>
@@ -125,9 +175,10 @@ function ColorInput({ label, value, onChange }) {
               width: 18,
               height: 18,
               borderRadius: '50%',
-              background: value || '#000',
-              border: '1px solid rgba(0,0,0,0.12)',
+              background: previewColor,
+              border: '1px solid rgba(0,0,0,0.15)',
               flexShrink: 0,
+              transition: 'background 0.15s ease',
             }}
           />
           <Typography variant="body2" sx={{ color: 'text.primary' }}>
@@ -142,8 +193,45 @@ function ColorInput({ label, value, onChange }) {
         onClose={handleClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        PaperProps={{ sx: { p: 1.5, minWidth: 260, borderRadius: 3 } }}
+        PaperProps={{ sx: { p: 2, minWidth: 272, borderRadius: 3 } }}
       >
+        {/* ── Hex input row ── */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+          {/* Live preview dot */}
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              flexShrink: 0,
+              background: previewColor,
+              border: '2px solid',
+              borderColor: hexIsValid ? 'transparent' : 'error.main',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.14)',
+              transition: 'background 0.15s ease, border-color 0.15s ease',
+            }}
+          />
+          <TextField
+            size="small"
+            fullWidth
+            value={hexDraft}
+            onChange={handleHexInput}
+            onBlur={handleHexBlur}
+            error={!hexIsValid && hexDraft.length > 1}
+            placeholder="#000000"
+            inputProps={{ maxLength: 7, style: { fontFamily: 'monospace', letterSpacing: '0.05em' } }}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+            helperText={!hexIsValid && hexDraft.length > 1 ? 'Enter a valid hex e.g. #ff6b35' : ''}
+            FormHelperTextProps={{ sx: { mt: 0.25 } }}
+          />
+        </Box>
+
+        {/* ── Divider ── */}
+        <Typography variant="caption" sx={{ display: 'block', color: 'text.disabled', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', mb: 1 }}>
+          Presets
+        </Typography>
+
+        {/* ── Preset swatches ── */}
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 1.25 }}>
           {PRESET_COLORS.map((preset) => {
             const selected = preset.toLowerCase() === (value || '').toLowerCase();
@@ -153,20 +241,23 @@ function ColorInput({ label, value, onChange }) {
                   component="button"
                   type="button"
                   onClick={() => {
-                    onChange({ target: { value: preset } });
+                    setHexDraft(preset);
+                    applyColor(preset);
                     handleClose();
                   }}
                   sx={{
                     width: 36,
                     height: 36,
                     borderRadius: '50%',
-                    border: selected ? '2px solid' : '2px solid transparent',
+                    border: selected ? '2.5px solid' : '2px solid transparent',
                     borderColor: selected ? 'primary.main' : 'transparent',
+                    outline: selected ? '2px solid' : 'none',
+                    outlineColor: selected ? 'primary.light' : 'transparent',
                     background: preset,
                     cursor: 'pointer',
                     transition: 'transform 0.15s ease, border-color 0.15s ease',
                     '&:hover': {
-                      transform: 'scale(1.05)',
+                      transform: 'scale(1.12)',
                     },
                   }}
                 />
@@ -275,10 +366,15 @@ export default function WebsiteMarketingPage() {
         phone: phone || undefined,
       });
       setWebsite(w);
+      // Automatically publish to avoid confusing 2-step process
+      setPublishing(true);
+      const pub = await publishWebsite(token, w.id);
+      setWebsite(pub);
     } catch (e) {
-      setError(e.message || 'Generation failed. Please try again.');
+      setError(e.message || 'Action failed. Please try again.');
     } finally {
       setGenerating(false);
+      setPublishing(false);
     }
   };
 
@@ -297,11 +393,24 @@ export default function WebsiteMarketingPage() {
     }
   };
 
+  // ── Public site base URL resolution ─────────────────────────────────────
+  const PUBLIC_SITE_BASE_URL = (
+    process.env.REACT_APP_PUBLIC_SITE_BASE_URL ||
+    'https://website-templates-weld.vercel.app'
+  ).replace(/\/$/, '');
+
+  const formatPublishedUrl = (url) => {
+    if (!url) return '';
+    return url.replace(/^https?:\/\/localhost:3001/, PUBLIC_SITE_BASE_URL);
+  };
+
+  const effectivePublishedUrl = formatPublishedUrl(website?.publishedUrl);
+
   // ── Copy URL ────────────────────────────────────────────────────────────────
   const handleCopy = () => {
-    if (!website?.publishedUrl) return;
+    if (!effectivePublishedUrl) return;
     const copy = navigator.clipboard?.writeText
-      ? navigator.clipboard.writeText(website.publishedUrl)
+      ? navigator.clipboard.writeText(effectivePublishedUrl)
       : Promise.reject(new Error('Clipboard unavailable'));
     copy.then(() => {
       setCopied(true);
@@ -508,7 +617,7 @@ export default function WebsiteMarketingPage() {
                     fullWidth
                     variant="contained"
                     size="large"
-                    startIcon={generating ? <CircularProgress size={18} color="inherit" /> : <AutoAwesomeIcon />}
+                    startIcon={(generating || publishing) ? <CircularProgress size={18} color="inherit" /> : <AutoAwesomeIcon />}
                     disabled={generating || publishing}
                     onClick={handleGenerate}
                     sx={{
@@ -521,22 +630,8 @@ export default function WebsiteMarketingPage() {
                       '&:hover': { background: `linear-gradient(135deg,#0f766e,${primaryColor || '#0f766e'})` },
                     }}
                   >
-                    {generating ? 'Generating…' : hasDraft ? 'Regenerate Website' : 'Generate Website'}
+                    {generating ? 'Generating Content…' : publishing ? 'Publishing Live…' : hasDraft ? 'Save & Publish Changes' : 'Generate & Publish Website'}
                   </Button>
-
-                  {hasDraft && (
-                    <Button
-                      fullWidth
-                      variant="text"
-                      size="small"
-                      startIcon={<RefreshIcon />}
-                      disabled={generating}
-                      onClick={handleGenerate}
-                      sx={{ mt: 1, borderRadius: 2, color: 'text.secondary' }}
-                    >
-                      Re-generate with new settings
-                    </Button>
-                  )}
                 </CardContent>
               </Card>
             </Grid>
@@ -700,7 +795,6 @@ export default function WebsiteMarketingPage() {
                     }}
                   >
                     <CardContent sx={{ p: 3.5 }}>
-                      {isPublished ? (
                         <Stack spacing={2}>
                           <Stack direction="row" alignItems="center" spacing={1}>
                             <CheckCircleIcon sx={{ color: '#22C55E', fontSize: 24 }} />
@@ -723,7 +817,7 @@ export default function WebsiteMarketingPage() {
                             }}
                           >
                             <Link
-                              href={website.publishedUrl}
+                              href={effectivePublishedUrl}
                               target="_blank"
                               rel="noreferrer"
                               sx={{
@@ -735,7 +829,7 @@ export default function WebsiteMarketingPage() {
                                 fontWeight: 600,
                               }}
                             >
-                              {website.publishedUrl}
+                              {effectivePublishedUrl}
                             </Link>
                             <Stack direction="row" spacing={0.5}>
                               <Tooltip title={copied ? 'Copied!' : 'Copy URL'}>
@@ -746,63 +840,14 @@ export default function WebsiteMarketingPage() {
                               <Tooltip title="Open site">
                                 <IconButton
                                   size="small"
-                                  onClick={() => window.open(website.publishedUrl, '_blank')}
+                                  onClick={() => window.open(effectivePublishedUrl, '_blank')}
                                 >
                                   <OpenInNewIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
                             </Stack>
                           </Box>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<RefreshIcon />}
-                            disabled={publishing || generating}
-                            onClick={handlePublish}
-                            sx={{ alignSelf: 'flex-start', borderRadius: 2 }}
-                          >
-                            Re-publish (apply latest changes)
-                          </Button>
                         </Stack>
-                      ) : (
-                        <Stack spacing={2}>
-                          <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                            Ready to publish
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                            Your website draft is ready. Click Publish to make it live on our platform. Your site will be accessible at:
-                          </Typography>
-                          <Box
-                            sx={{
-                              p: 1.5,
-                              borderRadius: 2,
-                              background: mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                              fontFamily: 'monospace',
-                              fontSize: '0.85rem',
-                              color: 'text.secondary',
-                            }}
-                          >
-                            {`[platform-url]${publicPath}`}
-                          </Box>
-                          <Button
-                            variant="contained"
-                            size="large"
-                            startIcon={publishing ? <CircularProgress size={18} color="inherit" /> : <PublishIcon />}
-                            disabled={publishing || generating}
-                            onClick={handlePublish}
-                            sx={{
-                              borderRadius: 3,
-                              py: 1.5,
-                              fontWeight: 700,
-                              background: 'linear-gradient(135deg,#0F766E,#0D9488)',
-                              boxShadow: '0 10px 24px rgba(15,118,110,0.28)',
-                              '&:hover': { background: 'linear-gradient(135deg,#0D9488,#0F766E)' },
-                            }}
-                          >
-                            {publishing ? 'Publishing…' : 'Publish Website'}
-                          </Button>
-                        </Stack>
-                      )}
                     </CardContent>
                   </Card>
                 )}
