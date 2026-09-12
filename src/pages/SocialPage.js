@@ -343,15 +343,27 @@ export default function SocialPage() {
     setPostsError('');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/generate-posts`, {
-        idea: postIdea,
-        platforms: selectedPlatforms,
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/generate-posts`,
+        {
+          idea: postIdea,
+          platforms: selectedPlatforms,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setPosts(response.data.posts || []);
     } catch (error) {
       console.error(error);
-      setPostsError('Failed to generate posts. Check the backend endpoint and try again.');
+      setPostsError(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          'Failed to generate posts. Check the backend endpoint and try again.'
+      );
     } finally {
       setLoadingPosts(false);
     }
@@ -620,7 +632,7 @@ export default function SocialPage() {
         <Stack spacing={4} sx={{ py: 4 }}>
           <Box>
             <Chip
-              label="Social Media Studio"
+              label="AI Social Media & Ad Studio"
               icon={<AutoAwesomeIcon />}
               sx={{
                 mb: 2,
@@ -638,11 +650,10 @@ export default function SocialPage() {
                 mb: 1,
               }}
             >
-              Ads, Posts, and Share Flows
+              AI Ad Creatives & Multi-Platform Social Studio
             </Typography>
             <Typography sx={{ maxWidth: 760, color: theme.palette.text.secondary }}>
-              Generate social ads and platform-specific post ideas, then copy, download, or open share links for Facebook,
-              Instagram, X, LinkedIn, and WhatsApp.
+              Create targeted promotional copy, high-converting ad variations, and platform-tailored social posts with one-click sharing for Facebook, Instagram, X (Twitter), LinkedIn, and WhatsApp.
             </Typography>
           </Box>
 
@@ -650,7 +661,7 @@ export default function SocialPage() {
             <Card sx={{ flex: 1, borderRadius: 3, background: mode === 'dark' ? 'rgba(6,10,13,0.8)' : 'rgba(255,255,255,0.92)' }}>
               <CardContent sx={{ p: 3.5 }}>
                 <Typography variant="h6" sx={{ fontWeight: 800, mb: 2.5 }}>
-                  Generate Ad
+                  1. AI Ad Copy Generator
                 </Typography>
                 <Stack spacing={2}>
                   <TextField
@@ -845,11 +856,11 @@ whiteSpace:"pre-wrap"
 
             <Card sx={{ flex: 1, borderRadius: 3, background: mode === 'dark' ? 'rgba(6,10,13,0.8)' : 'rgba(255,255,255,0.92)' }}>
               <CardContent sx={{ p: 3.5 }}>
-                <Typography variant="h6" sx={{ fontWeight: 800, mb: 2.5 }}>
-                  Social Accounts
+                <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
+                  2. Target Social Channels & Quick-Share Links
                 </Typography>
-                <Typography sx={{ color: theme.palette.text.secondary, mb: 2 }}>
-                  Optional. These help the share buttons open the right profile or chat.
+                <Typography variant="body2" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
+                  Connect your brand profiles or WhatsApp numbers to enable 1-click sharing directly to your pages and customer groups.
                 </Typography>
                 <Stack spacing={1.5}>
                   {platformOptions.map((option) => (

@@ -30,13 +30,16 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PaletteIcon from '@mui/icons-material/Palette';
 import LinkIcon from '@mui/icons-material/Link';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import EditIcon from '@mui/icons-material/Edit';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import SaveIcon from '@mui/icons-material/Save';
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '../constants/routes';
 import { useMarketingPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 import { fetchBusinesses } from '../services/businessApi';
-import { fetchLatestWebsite, generateWebsite, publishWebsite } from '../services/websiteApi';
+import { fetchLatestWebsite, generateWebsite, publishWebsite, updateWebsite } from '../services/websiteApi';
 
 // ─── Status badge ────────────────────────────────────────────────────────────
 
@@ -314,6 +317,14 @@ export default function WebsiteMarketingPage() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
+  // Editable AI copy states
+  const [isEditingCopy, setIsEditingCopy] = useState(false);
+  const [editableHero, setEditableHero] = useState('');
+  const [editableAbout, setEditableAbout] = useState('');
+  const [editableMarketing, setEditableMarketing] = useState('');
+  const [savingCopy, setSavingCopy] = useState(false);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+
   // ── Load business + latest website on mount ──────────────────────────────
   useEffect(() => {
     let cancelled = false;
@@ -329,6 +340,9 @@ export default function WebsiteMarketingPage() {
           const w = await fetchLatestWebsite(token, b.id);
           if (!cancelled && w) {
             setWebsite(w);
+            setEditableHero(w.heroText || '');
+            setEditableAbout(w.aboutText || '');
+            setEditableMarketing(w.marketingText || '');
             // Pre-fill form from saved website settings
             setPrimaryColor(w.primaryColor || '#0f766e');
             setSecondaryColor(w.secondaryColor || '#f59e0b');
@@ -391,6 +405,51 @@ export default function WebsiteMarketingPage() {
     } finally {
       setPublishing(false);
     }
+  };
+
+  // ── Save Editable Copy ──────────────────────────────────────────────────────
+  const handleSaveCopy = async () => {
+    if (!website?.id) return;
+    setSavingCopy(true);
+    setError('');
+    setSaveSuccessMsg('');
+    try {
+      const updated = await updateWebsite(token, website.id, {
+        heroText: editableHero,
+        aboutText: editableAbout,
+        marketingText: editableMarketing,
+        primaryColor,
+        secondaryColor,
+        contactEmail,
+        phone,
+      });
+      setWebsite(updated);
+      setIsEditingCopy(false);
+      setSaveSuccessMsg('Website content updated successfully!');
+      setTimeout(() => setSaveSuccessMsg(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to save website changes.');
+    } finally {
+      setSavingCopy(false);
+    }
+  };
+
+  const applyCreativeAngle = (type) => {
+    const name = business?.businessName || 'Our Business';
+    if (type === 'heritage') {
+      setEditableHero(`Pure Sri Lankan Heritage — Handcrafted by ${name}`);
+      setEditableAbout(`${name} preserves traditional artisanal methods, harvesting from local sustainable groves to produce authentic, unrefined, chemical-free products of natural purity.`);
+      setEditableMarketing(`Support generational rural growers. 100% natural, ethically sourced, and packed with Sri Lankan goodness.`);
+    } else if (type === 'export') {
+      setEditableHero(`World-Class Sri Lankan Quality | ${name}`);
+      setEditableAbout(`${name} adheres to rigorous manufacturing standards and quality assurance to deliver superior grade value-added agro products.`);
+      setEditableMarketing(`Lab-tested quality, batch traceability, and customized packaging designed for modern retail and international buyers.`);
+    } else if (type === 'farm') {
+      setEditableHero(`Direct from Village Groves to Your Doorstep | ${name}`);
+      setEditableAbout(`By eliminating middlemen, ${name} brings fresh, single-origin products directly from rural farming communities with transparent pricing.`);
+      setEditableMarketing(`Unadulterated taste, fair farmer compensation, and fast direct island-wide delivery.`);
+    }
+    setIsEditingCopy(true);
   };
 
   // ── Public site base URL resolution ─────────────────────────────────────
@@ -647,8 +706,25 @@ export default function WebsiteMarketingPage() {
                       <Typography variant="h6" sx={{ fontWeight: 800 }}>
                         AI-generated content
                       </Typography>
-                      {loadingWebsite && <CircularProgress size={18} />}
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        {loadingWebsite && <CircularProgress size={18} />}
+                        {hasDraft && !isEditingCopy && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<EditIcon />}
+                            onClick={() => setIsEditingCopy(true)}
+                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                          >
+                            Edit Copy
+                          </Button>
+                        )}
+                      </Stack>
                     </Stack>
+
+                    {saveSuccessMsg && (
+                      <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{saveSuccessMsg}</Alert>
+                    )}
 
                     {!hasDraft && !loadingWebsite ? (
                       <Box
@@ -672,7 +748,91 @@ export default function WebsiteMarketingPage() {
                         <Skeleton variant="rectangular" height={60} sx={{ borderRadius: 2 }} />
                         <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 2 }} />
                       </Stack>
+                    ) : isEditingCopy ? (
+                      /* ── EDIT MODE ── */
+                      <Stack spacing={2.5}>
+                        <Box sx={{ p: 2, borderRadius: 2, bgcolor: mode === 'dark' ? 'rgba(56,189,248,0.08)' : 'rgba(14,165,233,0.06)', border: '1px solid', borderColor: mode === 'dark' ? 'rgba(56,189,248,0.2)' : 'rgba(14,165,233,0.2)' }}>
+                          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                            <LightbulbIcon sx={{ color: '#0EA5E9', fontSize: 20 }} />
+                            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0EA5E9' }}>
+                              Explore Creative Angles
+                            </Typography>
+                          </Stack>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                            Select an angle to inspire your website copy, or customize directly below:
+                          </Typography>
+                          <Stack direction="row" flexWrap="wrap" gap={1}>
+                            <Button size="small" variant="outlined" onClick={() => applyCreativeAngle('heritage')} sx={{ borderRadius: 999, fontSize: '0.78rem' }}>
+                              🌿 Heritage & Pure Craft
+                            </Button>
+                            <Button size="small" variant="outlined" onClick={() => applyCreativeAngle('export')} sx={{ borderRadius: 999, fontSize: '0.78rem' }}>
+                              🌍 Export-Grade Premium
+                            </Button>
+                            <Button size="small" variant="outlined" onClick={() => applyCreativeAngle('farm')} sx={{ borderRadius: 999, fontSize: '0.78rem' }}>
+                              🌾 Farm-to-Table Fresh
+                            </Button>
+                          </Stack>
+                        </Box>
+
+                        <TextField
+                          label="Hero Headline / Tagline"
+                          fullWidth
+                          size="small"
+                          value={editableHero}
+                          onChange={(e) => setEditableHero(e.target.value)}
+                          multiline
+                          rows={2}
+                        />
+
+                        <TextField
+                          label="About Us Story"
+                          fullWidth
+                          size="small"
+                          value={editableAbout}
+                          onChange={(e) => setEditableAbout(e.target.value)}
+                          multiline
+                          rows={4}
+                        />
+
+                        <TextField
+                          label="Why Choose Us / Marketing Text"
+                          fullWidth
+                          size="small"
+                          value={editableMarketing}
+                          onChange={(e) => setEditableMarketing(e.target.value)}
+                          multiline
+                          rows={3}
+                        />
+
+                        <Stack direction="row" spacing={1.5} justifyContent="flex-end">
+                          <Button
+                            variant="text"
+                            onClick={() => {
+                              setEditableHero(website?.heroText || '');
+                              setEditableAbout(website?.aboutText || '');
+                              setEditableMarketing(website?.marketingText || '');
+                              setIsEditingCopy(false);
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="contained"
+                            startIcon={savingCopy ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+                            onClick={handleSaveCopy}
+                            disabled={savingCopy}
+                            sx={{
+                              borderRadius: 2,
+                              background: 'linear-gradient(135deg,#22C55E,#16A34A)',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {savingCopy ? 'Saving…' : 'Save Changes'}
+                          </Button>
+                        </Stack>
+                      </Stack>
                     ) : (
+                      /* ── PREVIEW MODE ── */
                       <Stack spacing={2}>
                         {/* Hero text */}
                         <Box>

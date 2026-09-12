@@ -70,8 +70,37 @@ export const createAppTheme = (mode = 'dark') => {
       MuiCard: {
         styleOverrides: {
           root: {
-            background: colors.background.paper,
+            background: mode === 'dark' ? 'rgba(17,24,39,0.85)' : colors.background.paper,
             backdropFilter: 'blur(20px)',
+            border: `1px solid ${colors.border.primary}`,
+          },
+        },
+      },
+      MuiDialog: {
+        styleOverrides: {
+          paper: {
+            backgroundColor: mode === 'dark' ? '#111827' : '#FFFFFF',
+            backgroundImage: 'none',
+            border: `1px solid ${colors.border.primary}`,
+            borderRadius: 20,
+            boxShadow: mode === 'dark' ? '0 25px 65px rgba(0,0,0,0.7)' : '0 20px 50px rgba(0,0,0,0.1)',
+          },
+        },
+      },
+      MuiMenu: {
+        styleOverrides: {
+          paper: {
+            backgroundColor: mode === 'dark' ? '#111827' : '#FFFFFF',
+            backgroundImage: 'none',
+            border: `1px solid ${colors.border.primary}`,
+          },
+        },
+      },
+      MuiPopover: {
+        styleOverrides: {
+          paper: {
+            backgroundColor: mode === 'dark' ? '#111827' : '#FFFFFF',
+            backgroundImage: 'none',
             border: `1px solid ${colors.border.primary}`,
           },
         },

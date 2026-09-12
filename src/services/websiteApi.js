@@ -47,3 +47,14 @@ export async function fetchLatestWebsite(token, businessId) {
   if (!res.ok) throw new Error('Failed to load website');
   return res.json();
 }
+
+export async function updateWebsite(token, websiteId, body) {
+  const res = await fetch(`${SPRING_BASE}/api/websites/${websiteId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeaders(token) },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || data.error || 'Update failed');
+  return data;
+}

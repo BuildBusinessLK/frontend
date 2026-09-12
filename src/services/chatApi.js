@@ -42,11 +42,12 @@ export async function deleteChatSession(token, sessionId) {
   if (!res.ok) throw new Error(await parseJsonError(res, 'Failed to delete chat'));
 }
 
-export async function sendChatMessage(token, { sessionId, question }) {
+export async function sendChatMessage(token, { sessionId, question }, signal) {
   const res = await fetch(`${SPRING_BASE}/api/chat/messages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders(token) },
     body: JSON.stringify({ sessionId: sessionId ?? null, question }),
+    signal,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || data.error || 'Chat failed');

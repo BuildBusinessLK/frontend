@@ -42,6 +42,14 @@ function LegacyMarketingRedirect() {
   return <Navigate to={`/dashboard/marketing${tail}`} replace />;
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -49,6 +57,7 @@ export default function App() {
         <AuthProvider>
           <CssBaseline />
           <Router>
+            <ScrollToTop />
             <Routes>
               {/* Public SME hosted business page */}
               <Route path="/business/:slug" element={<HostedSmeBusinessPage />} />

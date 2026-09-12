@@ -61,7 +61,7 @@ export const dark = {
     primary: '#060A0D',
     secondary: '#081410',
     tertiary: '#060D0A',
-    paper: 'rgba(255,255,255,0.03)',
+    paper: '#111827',
     hover: 'rgba(255,255,255,0.05)',
   },
   text: {

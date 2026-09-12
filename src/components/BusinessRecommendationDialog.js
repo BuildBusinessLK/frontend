@@ -52,15 +52,28 @@ export default function BusinessRecommendationDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Find Which Product Suits You More</DialogTitle>
-      <DialogContent sx={{ pt: 2 }}>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#121824' : '#ffffff'),
+          backgroundImage: 'none',
+        },
+      }}
+    >
+      <DialogTitle sx={{ pb: 1 }}>
+        AI Business & Product Matcher
+      </DialogTitle>
+      <DialogContent dividers sx={{ pt: '24px !important' }}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-        <Stack spacing={2}>
+        <Stack spacing={2.5} sx={{ mt: 1 }}>
           <TextField
             label="Investment Budget (LKR)"
             type="number"
@@ -69,6 +82,7 @@ export default function BusinessRecommendationDialog({
             fullWidth
             inputProps={{ min: 0, step: 10000 }}
             disabled={isLoading}
+            InputLabelProps={{ shrink: true }}
           />
           <TextField
             label="Monthly Yield / Production"
@@ -79,6 +93,7 @@ export default function BusinessRecommendationDialog({
             inputProps={{ min: 0, step: 100 }}
             disabled={isLoading}
             helperText="Expected monthly output in kg or units"
+            InputLabelProps={{ shrink: true }}
           />
           <TextField
             label="Number of Employees"
@@ -88,12 +103,14 @@ export default function BusinessRecommendationDialog({
             fullWidth
             inputProps={{ min: 1, step: 1 }}
             disabled={isLoading}
+            InputLabelProps={{ shrink: true }}
           />
           <FormControl fullWidth disabled={isLoading}>
-            <InputLabel>Experience Level</InputLabel>
+            <InputLabel shrink>Experience Level</InputLabel>
             <Select
               value={formData.experience}
               label="Experience Level"
+              notched
               onChange={handleChange('experience')}
             >
               <MenuItem value="beginner">Beginner</MenuItem>
@@ -103,7 +120,7 @@ export default function BusinessRecommendationDialog({
           </FormControl>
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={handleClose} disabled={isLoading}>
           Cancel
         </Button>
@@ -111,10 +128,10 @@ export default function BusinessRecommendationDialog({
           onClick={handleSubmit}
           variant="contained"
           disabled={isLoading}
-          sx={{ background: 'linear-gradient(135deg,#22C55E,#16A34A)' }}
+          startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
+          sx={{ borderRadius: 2, fontWeight: 700 }}
         >
-          {isLoading ? <CircularProgress size={20} sx={{ mr: 1 }} /> : null}
-          {isLoading ? 'Finding the Best Fit...' : 'Find My Best Fit'}
+          {isLoading ? 'Analyzing…' : 'Find Best Product Match'}
         </Button>
       </DialogActions>
     </Dialog>

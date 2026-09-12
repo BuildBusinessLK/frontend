@@ -4,6 +4,7 @@ import {
   writeStoredSession,
   apiRegister,
   apiLogin,
+  apiGoogleLogin,
   apiFetchMe,
 } from '../services/authApi';
 
@@ -26,11 +27,19 @@ export function AuthProvider({ children }) {
   const token = session?.token ?? null;
   const isAuthenticated = Boolean(sessionValidated && token && user);
 
-  const signIn = useCallback(async (email, password) => {
+  const signIn = useCallback(async (email, password, rememberMe = true) => {
     const next = await apiLogin({ email: email.trim(), password });
-    writeStoredSession(next);
+    writeStoredSession(next, rememberMe);
     setSession(next);
     setSessionValidated(true);
+  }, []);
+
+  const googleSignIn = useCallback(async (credential, rememberMe = true) => {
+    const next = await apiGoogleLogin(credential);
+    writeStoredSession(next, rememberMe);
+    setSession(next);
+    setSessionValidated(true);
+    return next;
   }, []);
 
   const signUp = useCallback(async (fullName, email, password) => {
@@ -39,7 +48,7 @@ export function AuthProvider({ children }) {
       email: email.trim(),
       password,
     });
-    writeStoredSession(next);
+    writeStoredSession(next, true);
     setSession(next);
     setSessionValidated(true);
   }, []);
@@ -49,6 +58,16 @@ export function AuthProvider({ children }) {
     setSession(null);
     setSessionValidated(true);
   }, []);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      signOut();
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    };
+  }, [signOut]);
 
   const setUser = useCallback((nextUser) => {
     setSession((prev) => {
@@ -104,12 +123,13 @@ export function AuthProvider({ children }) {
       isAuthenticated,
       sessionValidated,
       signIn,
+      googleSignIn,
       signUp,
       signOut,
       setUser,
       refreshProfile,
     }),
-    [user, token, isAuthenticated, sessionValidated, signIn, signUp, signOut, setUser, refreshProfile],
+    [user, token, isAuthenticated, sessionValidated, signIn, googleSignIn, signUp, signOut, setUser, refreshProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

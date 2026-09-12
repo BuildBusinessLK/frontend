@@ -200,14 +200,14 @@ export default function EmailPage() {
                 mb: 1,
               }}
             >
-              AI Email Generator
+              AI Email Campaign Studio
             </Typography>
             <Typography sx={{ maxWidth: 720, color: theme.palette.text.secondary }}>
-              Generate personalized emails and send them to your customers with AI assistance.
+              Draft and broadcast targeted email messages to your customer segments, wholesale distributors, and export leads.
             </Typography>
           </Box>
 
-          {/* Generation Section */}
+          {/* Step 1: Campaign Brief */}
           <Card
             sx={{
               borderRadius: 3,
@@ -217,13 +217,42 @@ export default function EmailPage() {
             }}
           >
             <CardContent sx={{ p: 3.5 }}>
-              <Typography variant="h6" sx={{ fontWeight: 800, mb: 2.5, color: theme.palette.text.primary }}>
-                Generate Email
+              <Typography variant="h6" sx={{ fontWeight: 800, mb: 1, color: theme.palette.text.primary }}>
+                Step 1: Campaign Brief & Goal
               </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+                Describe what you want to communicate, or choose one of the quick starters below.
+              </Typography>
+
+              {/* Quick Starters */}
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 2.5 }}>
+                {[
+                  'Wholesale harvest discount for commercial buyers (10% off for orders over 100 units)',
+                  'New certified export-grade batch now ready for shipment',
+                  'Quarterly product catalog update and custom packaging availability',
+                  'Seasonal festival greetings and thank-you note to loyal customers',
+                ].map((idea) => (
+                  <Chip
+                    key={idea}
+                    label={idea}
+                    onClick={() => setEmailIdea(idea)}
+                    clickable
+                    size="small"
+                    sx={{
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      borderRadius: 2,
+                      borderColor: mode === 'dark' ? 'rgba(56,189,248,0.3)' : '#bae6fd',
+                    }}
+                    variant="outlined"
+                  />
+                ))}
+              </Stack>
+
               <Stack spacing={2.5}>
                 <TextField
-                  label="Email Idea or Purpose"
-                  placeholder="e.g., Welcome new customers to our service"
+                  label="Campaign Message / Purpose"
+                  placeholder="e.g. Announce 15% promotional discount on our pure Kithul treacle bottles for bulk buyers this month."
                   value={emailIdea}
                   onChange={(e) => setEmailIdea(e.target.value)}
                   fullWidth
@@ -257,11 +286,11 @@ export default function EmailPage() {
                 >
                   {loadingEmail ? (
                     <>
-                      <CircularProgress size={20} sx={{ mr: 1 }} />
-                      Generating...
+                      <CircularProgress size={20} sx={{ mr: 1, color: '#fff' }} />
+                      Generating AI Draft…
                     </>
                   ) : (
-                    'Generate Email'
+                    'Generate AI Email Draft'
                   )}
                 </Button>
               </Stack>
@@ -280,9 +309,14 @@ export default function EmailPage() {
             >
               <CardContent sx={{ p: 3.5 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2.5 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 800, color: theme.palette.text.primary }}>
-                    Generated Email
-                  </Typography>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 800, color: theme.palette.text.primary }}>
+                      Step 2: Review & Edit AI Email Draft
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Feel free to fine-tune the subject and message body before dispatching to your audience.
+                    </Typography>
+                  </Box>
                   <Button
                     startIcon={<ContentCopyIcon />}
                     onClick={handleCopyEmail}
@@ -295,58 +329,37 @@ export default function EmailPage() {
 
                 {/* Subject */}
                 <Box sx={{ mb: 2.5 }}>
-                  <Typography
-                    variant="overline"
+                  <TextField
+                    label="Email Subject Line"
+                    fullWidth
+                    value={email.subject}
+                    onChange={(e) => setEmail({ ...email, subject: e.target.value })}
+                    variant="outlined"
                     sx={{
-                      letterSpacing: '0.2em',
-                      color: theme.palette.text.secondary,
-                      fontWeight: 700,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                      },
                     }}
-                  >
-                    Subject
-                  </Typography>
-                  <Paper
-                    sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      background: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.6)',
-                      border: mode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
-                      color: theme.palette.text.primary,
-                    }}
-                  >
-                    {email.subject}
-                  </Paper>
+                  />
                 </Box>
 
                 {/* Body */}
                 <Box>
-                  <Typography
-                    variant="overline"
+                  <TextField
+                    label="Email Body"
+                    fullWidth
+                    multiline
+                    rows={10}
+                    value={email.body}
+                    onChange={(e) => setEmail({ ...email, body: e.target.value })}
+                    variant="outlined"
                     sx={{
-                      letterSpacing: '0.2em',
-                      color: theme.palette.text.secondary,
-                      fontWeight: 700,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        fontFamily: 'inherit',
+                      },
                     }}
-                  >
-                    Body
-                  </Typography>
-                  <Paper
-                    sx={{
-                      p: 3,
-                      borderRadius: 2,
-                      background: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.6)',
-                      border: mode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
-                      fontFamily: 'monospace',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      color: theme.palette.text.primary,
-                      overflowX: 'auto',
-                      maxHeight: 400,
-                      overflow: 'auto',
-                    }}
-                  >
-                    {email.body}
-                  </Paper>
+                  />
                 </Box>
               </CardContent>
             </Card>
@@ -363,8 +376,11 @@ export default function EmailPage() {
               }}
             >
               <CardContent sx={{ p: 3.5 }}>
-                <Typography variant="h6" sx={{ fontWeight: 800, mb: 2.5, color: theme.palette.text.primary }}>
-                  Send Email
+                <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.5, color: theme.palette.text.primary }}>
+                  Step 3: Select Audience & Send Campaign
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+                  Choose which customer segments to send this campaign to.
                 </Typography>
                 <Stack spacing={2.5}>
                   <Box>

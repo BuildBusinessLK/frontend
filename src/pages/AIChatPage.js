@@ -25,6 +25,10 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
+import StopRoundedIcon from '@mui/icons-material/StopRounded';
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { AssistantFormattedText } from '../utils/assistantTextFormat.jsx';
@@ -32,7 +36,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { ROUTES } from '../constants/routes';
 import { useChatPageTopPadding } from '../hooks/useDashboardLayoutPadding';
 import {
-  createChatSession,
   deleteChatSession,
   fetchChatMessages,
   fetchChatSessions,
@@ -42,13 +45,69 @@ import {
 import { fetchBusinesses } from '../services/businessApi';
 import BusinessRecommendationDialog from '../components/BusinessRecommendationDialog';
 
-const SUGGESTIONS = [
-  { label: '🥥 Exports', query: 'Explain the coconut export process for a small Sri Lankan SME.' },
-  { label: '📢 Marketing', query: 'What low-cost marketing ideas fit rural kithul producers?' },
-  { label: '🏛️ Support', query: 'What government institutions support coconut SMEs in Sri Lanka?' },
-  { label: '🌐 Website', query: 'How can I build an online presence for my palmyrah business?' },
-  { label: '💰 Pricing', query: 'What are typical price ranges for coconut oil exports from Sri Lanka?' },
+const SUGGESTION_CATEGORIES = [
+  {
+    category: '🥥 Exports',
+    queries: [
+      'Explain the coconut export registration process via the Coconut Development Authority (CDA).',
+      'What certifications are required to export kithul treacle to European and Middle Eastern markets?',
+      'How do I calculate freight and export packaging costs for palmyrah handicraft exports?',
+      'What are the mandatory quality standards for exporting virgin coconut oil (VCO)?',
+    ],
+  },
+  {
+    category: '📢 Marketing',
+    queries: [
+      'What low-cost digital marketing ideas work best for rural kithul producers?',
+      'How can I brand my organic coconut products to appeal to urban Sri Lankan consumers?',
+      'What are effective social media campaign ideas for launching a palmyrah jaggery line?',
+      'How do I create local retailer partnerships and grocery distribution in Colombo?',
+    ],
+  },
+  {
+    category: '🌐 Website & Store',
+    queries: [
+      'How can I build an online store for my coconut and kithul value-added products?',
+      'What key sections and trust badges should my SME business website include?',
+      'How can I use BuildBusinessLK to launch a professional website for my business?',
+      'How do I integrate WhatsApp ordering and direct delivery on my product website?',
+    ],
+  },
+  {
+    category: '🏛️ Support & Grants',
+    queries: [
+      'What government grants and subsidies exist for coconut and palmyrah processors in Sri Lanka?',
+      'How does the Palmyrah Development Board (PDB) support small manufacturing businesses?',
+      'What low-interest SME bank loans are available for agro-processing machinery?',
+      'How do I register my enterprise with the Export Development Board (EDB)?',
+    ],
+  },
+  {
+    category: '💰 Pricing & Profit',
+    queries: [
+      'What are typical wholesale and retail price ranges for pure kithul syrup in Sri Lanka?',
+      'How should I calculate profit margins when selling coconut oil in 500ml glass jars?',
+      'What is the initial capital investment required for a small-scale palmyrah sweet workshop?',
+      'How can I reduce packaging and glass bottle costs for small batch production?',
+    ],
+  },
+  {
+    category: '⚙️ Quality & Fit',
+    queries: [
+      'How do I prevent fermentation and extend the shelf life of pure kithul treacle?',
+      'What machinery is required for small-scale desiccated coconut processing?',
+      'How can I test moisture content and purity in coconut copra and oil?',
+      'What are good manufacturing practices (GMP) for artisanal agro-food producers?',
+    ],
+  },
 ];
+
+function getRandomSuggestions() {
+  return SUGGESTION_CATEGORIES.map((cat) => ({
+    label: cat.category,
+    query: cat.queries[Math.floor(Math.random() * cat.queries.length)],
+  }));
+}
 
 const fmtTime = (iso) => {
   if (!iso) return '';
@@ -118,6 +177,10 @@ export default function AIChatPage() {
   const [showRecommendationDialog, setShowRecommendationDialog] = useState(false);
   const [recDialogError, setRecDialogError] = useState('');
   const [businessSector, setBusinessSector] = useState('coconut');
+  const [suggestions, setSuggestions] = useState(() => getRandomSuggestions());
+  const [recommendationResult, setRecommendationResult] = useState(null);
+  const abortControllerRef = useRef(null);
+  const [copiedId, setCopiedId] = useState(null);
   const listEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -170,23 +233,13 @@ export default function AIChatPage() {
 
   useEffect(() => { scrollToBottom(); }, [messages, loading]);
 
-  const onNewChat = async () => {
+  // Instant New Chat with 0ms network latency — lazily creates session on 1st message
+  const onNewChat = () => {
     setSendError('');
-
-    if (!token) {
-      setSendError('You must be signed in to start a new chat.');
-      return;
-    }
-
-    try {
-      const s = await createChatSession(token, 'New chat');
-      await loadSessions();
-      setSessionId(s.id);
-      setMessages([]);
-      inputRef.current?.focus();
-    } catch (error) {
-      setSendError(error.message || 'Unable to create chat session.');
-    }
+    setSessionId(null);
+    setMessages([]);
+    setSuggestions(getRandomSuggestions());
+    inputRef.current?.focus();
   };
 
   const onDeleteSession = async (event, chatId) => {
@@ -208,7 +261,15 @@ export default function AIChatPage() {
     } catch (error) {
       setSendError(error.message || 'Unable to delete chat session.');
     }
-  }; 
+  };
+
+  const onStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setLoading(false);
+  };
 
   const onSend = async (text) => {
     const q = (text ?? input).trim();
@@ -216,6 +277,10 @@ export default function AIChatPage() {
     setInput('');
     setSendError('');
     setLoading(true);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     const optimistic = [
       ...messages,
       {
@@ -227,17 +292,42 @@ export default function AIChatPage() {
     ];
     setMessages(optimistic);
     try {
-      const res = await sendChatMessage(token, { sessionId, question: q });
+      const res = await sendChatMessage(token, { sessionId, question: q }, controller.signal);
       const sid = res.sessionId || sessionId;
       if (res.sessionId && res.sessionId !== sessionId) setSessionId(res.sessionId);
       const fresh = await fetchChatMessages(token, sid);
       setMessages(fresh);
       await loadSessions();
     } catch (e) {
+      if (e.name === 'AbortError') {
+        // Stop requested by user; preserve optimistic prompt
+        return;
+      }
       setMessages((prev) => prev.filter((m) => !String(m.id).startsWith('tmp-')));
       setSendError(e.message || 'Message failed. Please try again.');
     } finally {
       setLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleCopyMessage = async (msgId, text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(msgId);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleRetry = (aiMsgIndex) => {
+    // Find the closest preceding user message
+    for (let i = aiMsgIndex - 1; i >= 0; i--) {
+      if (messages[i]?.sender === 'USER') {
+        onSend(messages[i].message);
+        break;
+      }
     }
   };
 
@@ -258,7 +348,8 @@ export default function AIChatPage() {
     setShowRecommendationDialog(true);
   };
 
-  const onSubmitRecommendation = async (profileData) => {
+  const onRecommendationSubmit = async (profileData) => {
+    if (!token) return;
     setLoading(true);
     setRecDialogError('');
     try {
@@ -269,8 +360,31 @@ export default function AIChatPage() {
         return;
       }
       setShowRecommendationDialog(false);
-      const fresh = await fetchChatMessages(token, sessionId);
-      setMessages(fresh);
+      setRecommendationResult(rec);
+      const sid = rec.sessionId || sessionId;
+      if (sid) {
+        setSessionId(sid);
+        const fresh = await fetchChatMessages(token, sid);
+        if (fresh && fresh.length > 0) {
+          setMessages(fresh);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `rec-user-${Date.now()}`,
+              sender: 'USER',
+              message: 'Which product suits my business profile best?',
+              createdAt: new Date().toISOString(),
+            },
+            {
+              id: `rec-ai-${Date.now() + 1}`,
+              sender: 'AI',
+              message: `**Recommended Product:** ${rec.recommendedBusiness}\n\n**Guidance:**\n${rec.guidance || rec.message || 'Focus on value-added processing for higher margins.'}`,
+              createdAt: new Date().toISOString(),
+            },
+          ]);
+        }
+      }
       await loadSessions();
     } catch (e) {
       setRecDialogError(e.message || 'Failed to get recommendation.');
@@ -280,30 +394,48 @@ export default function AIChatPage() {
   };
 
   const sessionTitle = useMemo(() => {
-    const s = sessions.find((x) => x.id === sessionId);
-    return s?.title || 'AI assistant';
+    if (!sessionId) return 'New chat';
+    const found = sessions.find((s) => s.id === sessionId);
+    return found?.title || 'Chat session';
   }, [sessions, sessionId]);
 
   const hasMessages = messages.length > 0;
 
   return (
-    <Box sx={{ ...topPad, maxWidth: 1200, mx: 'auto' }}>
-      <Typography variant="h5" sx={{ fontWeight: 900, letterSpacing: '-0.03em', mb: 2 }}>
+    <Box
+      sx={{
+        ...topPad,
+        maxWidth: 1400,
+        mx: 'auto',
+        height: { xs: 'auto', md: 'calc(100vh - 105px)' },
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      <Typography variant="h5" sx={{ fontWeight: 900, letterSpacing: '-0.03em', mb: 1.5, flexShrink: 0 }}>
         AI Assistant
       </Typography>
 
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="stretch">
-        {/* Sidebar — sessions */}
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={2}
+        alignItems="stretch"
+        sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+      >
+        {/* Sidebar — sessions list */}
         <Card
           sx={{
-            width: { xs: '100%', md: 260 },
+            width: { xs: '100%', md: 280 },
             flexShrink: 0,
             borderRadius: 3,
             display: 'flex',
             flexDirection: 'column',
+            height: '100%',
+            overflow: 'hidden',
           }}
         >
-          <CardContent sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <CardContent sx={{ p: 2, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <Button
               fullWidth
               variant="contained"
@@ -314,11 +446,12 @@ export default function AIChatPage() {
                 borderRadius: 2,
                 fontWeight: 700,
                 background: 'linear-gradient(135deg,#22C55E,#16A34A)',
+                flexShrink: 0,
               }}
             >
               New chat
             </Button>
-            <Divider sx={{ mb: 1 }} />
+            <Divider sx={{ mb: 1, flexShrink: 0 }} />
             {fetchError ? (
               <Typography
                 variant="caption"
@@ -339,7 +472,7 @@ export default function AIChatPage() {
                 No chats yet. Start a new one!
               </Typography>
             ) : (
-              <List dense disablePadding sx={{ flex: 1, overflow: 'auto', maxHeight: 380 }}>
+              <List dense disablePadding sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 {sessions.map((s) => (
                   <ListItemButton
                     key={s.id}
@@ -373,22 +506,23 @@ export default function AIChatPage() {
         </Card>
 
         {/* Main chat area */}
-        <Card sx={{ flex: 1, borderRadius: 3, display: 'flex', flexDirection: 'column' }}>
+        <Card sx={{ flex: 1, height: '100%', minHeight: 0, borderRadius: 3, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <CardContent
             sx={{
-              p: { xs: 2, sm: 3 },
+              p: { xs: 2, sm: 2.5 },
               display: 'flex',
               flexDirection: 'column',
-              minHeight: 520,
               flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
             }}
           >
-            {/* Session title */}
+            {/* Session title header */}
             <Stack
               direction="row"
               alignItems="center"
               spacing={1}
-              sx={{ mb: 2, pb: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}
+              sx={{ mb: 1.5, pb: 1.5, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0 }}
             >
               <SmartToyRoundedIcon sx={{ color: '#22C55E', fontSize: 20 }} />
               <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
@@ -407,17 +541,17 @@ export default function AIChatPage() {
               />
             </Stack>
 
-            {/* Suggestion chips — shown only when no messages */}
+            {/* Suggestions banner when no messages */}
             {!hasMessages && !loading && (
-              <Box sx={{ mb: 2 }}>
-                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1.5 }}>
+              <Box sx={{ mb: 2, flexShrink: 0 }}>
+                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1.25 }}>
                   <AutoAwesomeIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
                   <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                    Suggested questions
+                    Suggested questions (select to ask instantly)
                   </Typography>
                 </Stack>
-                <Stack direction="row" flexWrap="wrap" gap={1}>
-                  {SUGGESTIONS.map((s) => (
+                <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 1.5 }}>
+                  {suggestions.map((s) => (
                     <Chip
                       key={s.label}
                       label={s.label}
@@ -448,17 +582,19 @@ export default function AIChatPage() {
                   onClick={onGetRecommendation}
                   disabled={loading}
                   sx={{
-                    mt: 2,
+                    borderRadius: 999,
+                    fontSize: '0.8rem',
                     background: 'linear-gradient(135deg,#22C55E,#16A34A)',
+                    boxShadow: '0 4px 14px rgba(34,197,94,0.3)',
                     fontWeight: 700,
                   }}
                 >
-                  ✨ Find Which Product Suits You More
+                  ✨ Match Products for My Business
                 </Button>
               </Box>
             )}
 
-            {/* Empty state */}
+            {/* Empty state icon */}
             {!hasMessages && !loading && (
               <Box
                 sx={{
@@ -468,23 +604,24 @@ export default function AIChatPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   opacity: 0.45,
-                  pb: 4,
+                  pb: 2,
                 }}
               >
-                <SmartToyRoundedIcon sx={{ fontSize: 52, mb: 1.5 }} />
+                <SmartToyRoundedIcon sx={{ fontSize: 48, mb: 1.5 }} />
                 <Typography variant="body2" textAlign="center">
-                  Ask about coconut, kithul, or palmyrah businesses
+                  Ask about coconut, kithul, or palmyrah businesses, marketing, export rules, or website creation
                 </Typography>
               </Box>
             )}
 
-            {/* Messages */}
-            <Box sx={{ flex: 1, overflow: 'auto', pr: 0.5 }}>
-              {messages.map((m) => {
+            {/* Messages list with independent scroll */}
+            <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}>
+              {messages.map((m, idx) => {
                 const isUser = m.sender === 'USER';
+                const isLastAi = !isUser && idx === messages.length - 1;
                 return (
                   <Box
-                    key={m.id}
+                    key={m.id || idx}
                     sx={{
                       mb: 2,
                       display: 'flex',
@@ -494,7 +631,7 @@ export default function AIChatPage() {
                   >
                     <Box
                       sx={{
-                        maxWidth: '88%',
+                        maxWidth: { xs: '92%', md: '84%' },
                         px: 2,
                         py: 1.25,
                         borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
@@ -529,6 +666,8 @@ export default function AIChatPage() {
                           {m.message}
                         </Typography>
                       )}
+
+                      {/* Action buttons suggested by AI */}
                       {m.sender === 'AI' && m.action === 'GENERATE_WEBSITE' && (
                         <Button
                           size="small"
@@ -591,6 +730,33 @@ export default function AIChatPage() {
                           Edit business profile
                         </Button>
                       )}
+
+                      {/* AI utility action bar: Copy & Retry */}
+                      {m.sender === 'AI' && (
+                        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 1, pt: 0.75, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                          <Tooltip title={copiedId === m.id ? 'Copied!' : 'Copy response'}>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleCopyMessage(m.id, m.message)}
+                              sx={{ color: copiedId === m.id ? '#22C55E' : 'text.secondary', p: 0.5 }}
+                            >
+                              {copiedId === m.id ? <CheckRoundedIcon sx={{ fontSize: 15 }} /> : <ContentCopyRoundedIcon sx={{ fontSize: 15 }} />}
+                            </IconButton>
+                          </Tooltip>
+                          {isLastAi && (
+                            <Tooltip title="Regenerate / Retry response">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleRetry(idx)}
+                                disabled={loading}
+                                sx={{ color: 'text.secondary', p: 0.5 }}
+                              >
+                                <ReplayRoundedIcon sx={{ fontSize: 15 }} />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                        </Stack>
+                      )}
                     </Box>
                   </Box>
                 );
@@ -598,73 +764,95 @@ export default function AIChatPage() {
 
               {loading && <TypingIndicator mode={mode} />}
               {sendError && (
-                <Typography variant="caption" color="error" sx={{ display: 'block', mb: 1 }}>
+                <Typography variant="caption" sx={{ color: 'error.main', display: 'block', mb: 1 }}>
                   {sendError}
                 </Typography>
               )}
               <div ref={listEndRef} />
             </Box>
 
-            {/* Input row */}
-            <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+            {/* Input form — flexShrink: 0 */}
+            <Box
+              component="form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                onSend();
+              }}
+              sx={{
+                display: 'flex',
+                gap: 1,
+                alignItems: 'center',
+                pt: 1.5,
+                borderTop: '1px solid',
+                borderColor: 'divider',
+                flexShrink: 0,
+              }}
+            >
               <TextField
-                fullWidth
                 inputRef={inputRef}
-                placeholder="Ask about coconut, kithul, or palmyrah…"
+                fullWidth
+                size="small"
+                placeholder="Ask about coconut, kithul, or palmyrah..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    onSend();
-                  }
-                }}
-                multiline
-                minRows={1}
-                maxRows={5}
+                disabled={loading}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: 3,
+                    borderRadius: 999,
+                    background: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
                   },
                 }}
               />
-              <Tooltip title="Send (Enter)">
-                <span>
+              {loading ? (
+                <Tooltip title="Stop generating">
                   <IconButton
-                    color="primary"
-                    onClick={() => onSend()}
-                    disabled={loading || !input.trim()}
+                    type="button"
+                    onClick={onStop}
                     sx={{
-                      width: 48,
-                      height: 48,
-                      background:
-                        !loading && input.trim()
-                          ? 'linear-gradient(135deg,#22C55E,#16A34A)'
-                          : undefined,
-                      color: !loading && input.trim() ? '#fff' : undefined,
-                      borderRadius: 3,
+                      background: 'linear-gradient(135deg,#EF4444,#DC2626)',
+                      color: '#fff',
+                      borderRadius: 999,
+                      p: 1.25,
+                      boxShadow: '0 4px 14px rgba(239,68,68,0.4)',
                       '&:hover': {
-                        background:
-                          !loading && input.trim()
-                            ? 'linear-gradient(135deg,#16A34A,#15803D)'
-                            : undefined,
+                        background: 'linear-gradient(135deg,#DC2626,#B91C1C)',
                       },
-                      transition: 'all 0.18s',
                     }}
                   >
-                    {loading ? <CircularProgress size={20} /> : <SendRoundedIcon />}
+                    <StopRoundedIcon fontSize="small" />
                   </IconButton>
-                </span>
-              </Tooltip>
-            </Stack>
+                </Tooltip>
+              ) : (
+                <IconButton
+                  type="submit"
+                  disabled={!input.trim()}
+                  sx={{
+                    background: 'linear-gradient(135deg,#22C55E,#16A34A)',
+                    color: '#fff',
+                    borderRadius: 999,
+                    p: 1.25,
+                    '&:hover': {
+                      background: 'linear-gradient(135deg,#16A34A,#15803D)',
+                    },
+                    '&.Mui-disabled': {
+                      background: mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                      color: mode === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
+                    },
+                  }}
+                >
+                  <SendRoundedIcon fontSize="small" />
+                </IconButton>
+              )}
+            </Box>
           </CardContent>
         </Card>
       </Stack>
 
+      {/* Product Fit / Recommendation Dialog */}
       <BusinessRecommendationDialog
         open={showRecommendationDialog}
         onClose={() => setShowRecommendationDialog(false)}
-        onSubmit={onSubmitRecommendation}
+        onSubmit={onRecommendationSubmit}
         isLoading={loading}
         error={recDialogError}
         businessSector={businessSector}
