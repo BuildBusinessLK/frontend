@@ -53,7 +53,7 @@ export default function BusinessRecommendationDialog({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>ML Business Recommendation</DialogTitle>
+      <DialogTitle>Find Which Product Suits You More</DialogTitle>
       <DialogContent sx={{ pt: 2 }}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -114,7 +114,7 @@ export default function BusinessRecommendationDialog({
           sx={{ background: 'linear-gradient(135deg,#22C55E,#16A34A)' }}
         >
           {isLoading ? <CircularProgress size={20} sx={{ mr: 1 }} /> : null}
-          {isLoading ? 'Getting Recommendation...' : 'Get Recommendation'}
+          {isLoading ? 'Finding the Best Fit...' : 'Find My Best Fit'}
         </Button>
       </DialogActions>
     </Dialog>

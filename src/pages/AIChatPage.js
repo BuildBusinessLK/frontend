@@ -262,26 +262,15 @@ export default function AIChatPage() {
     setLoading(true);
     setRecDialogError('');
     try {
-      const rec = await getBusinessRecommendation(token, null, profileData);
+      const rec = await getBusinessRecommendation(token, sessionId, null, profileData);
       if (rec.message && !rec.recommendedBusiness) {
         setRecDialogError(rec.message);
         setLoading(false);
         return;
       }
       setShowRecommendationDialog(false);
-      const userMsg = {
-        id: `tmp-${Date.now()}`,
-        sender: 'USER',
-        message: `💡 ML Business Recommendation for ${profileData.sector} (Sector: ${profileData.sector}, Budget: ${profileData.budget}, Yield: ${profileData.monthly_yield}, Employees: ${profileData.employees}, Experience: ${profileData.experience})`,
-        createdAt: new Date().toISOString(),
-      };
-      const aiMsg = {
-        id: `tmp-${Date.now() + 1}`,
-        sender: 'AI',
-        message: `**Recommended Business:** ${rec.recommendedBusiness}\n\n**Guidance:**\n${rec.guidance}`,
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, userMsg, aiMsg]);
+      const fresh = await fetchChatMessages(token, sessionId);
+      setMessages(fresh);
       await loadSessions();
     } catch (e) {
       setRecDialogError(e.message || 'Failed to get recommendation.');
@@ -464,7 +453,7 @@ export default function AIChatPage() {
                     fontWeight: 700,
                   }}
                 >
-                  💡 Get ML Business Recommendation
+                  ✨ Find Which Product Suits You More
                 </Button>
               </Box>
             )}
