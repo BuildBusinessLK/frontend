@@ -6,10 +6,6 @@ import {
   Button,
   CircularProgress,
   Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
   IconButton,
   InputAdornment,
@@ -27,7 +23,7 @@ import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import LanguageIcon from '@mui/icons-material/Language';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
-import CloseIcon from '@mui/icons-material/Close';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -60,7 +56,7 @@ function GoogleIcon() {
 export default function SignUpPage() {
   const { mode, toggleTheme } = useThemeMode();
   const { language, toggleLanguage } = useLanguage();
-  const { signUp, googleSignIn, user } = useAuth();
+  const { signUp, googleSignIn, signOut, user } = useAuth();
   const navigate = useNavigate();
   const colors = getThemeColors(mode);
 
@@ -84,18 +80,19 @@ export default function SignUpPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // OTP Verification Modal state
-  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [otpValue, setOtpValue] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
   const [otpSuccessMsg, setOtpSuccessMsg] = useState('');
 
-  if (user && !showOtpModal) {
+  if (user && !isVerifying) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -115,12 +112,15 @@ export default function SignUpPage() {
       setError('Password must contain at least 8 characters.');
       return;
     }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
     setError('');
     setLoading(true);
     try {
       await signUp(n, em, password);
-      // Registration complete, show OTP modal
-      setShowOtpModal(true);
+      setIsVerifying(true);
     } catch (err) {
       setError(err.message || 'Could not create account.');
     } finally {
@@ -200,13 +200,21 @@ export default function SignUpPage() {
     setOtpError('');
     try {
       await apiVerifyOtp(email, otpValue);
-      setShowOtpModal(false);
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setOtpError(err.message || 'Invalid verification code.');
     } finally {
       setOtpLoading(false);
     }
+  };
+
+  const handleBackToDetails = () => {
+    signOut();
+    setIsVerifying(false);
+    setOtpValue('');
+    setOtpError('');
+    setOtpSuccessMsg('');
+    setError('');
   };
 
   const handleResendOtp = async () => {
@@ -309,120 +317,122 @@ export default function SignUpPage() {
               </Box>
             </Stack>
 
-            {/* Google Sign Up */}
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={handleGoogleSignUp}
-              startIcon={<GoogleIcon />}
-              sx={{
-                py: 1.2,
-                mt: 1,
-                mb: 2.5,
-                borderRadius: 3,
-                textTransform: 'none',
-                fontWeight: 600,
-                color: mode === 'dark' ? '#f3f4f6' : '#1f2937',
-                borderColor: mode === 'dark' ? 'rgba(255,255,255,0.18)' : '#e5e7eb',
-                background: mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#ffffff',
-                '&:hover': {
-                  borderColor: mode === 'dark' ? 'rgba(255,255,255,0.35)' : '#d1d5db',
-                  background: mode === 'dark' ? 'rgba(255,255,200,0.06)' : '#f9fafb',
-                },
-              }}
-            >
-              Sign up with Google
-            </Button>
-
-            <Divider sx={{ borderColor: colors.border.secondary, mb: 2.5 }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', px: 1 }}>
-                or register with email
-              </Typography>
-            </Divider>
-
-            <Box component="form" onSubmit={handleSubmit} noValidate>
-              <Stack spacing={2.25}>
-                <TextField
-                  label="Full name"
-                  autoComplete="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  fullWidth
-                  required
-                />
-                <TextField
-                  label="Email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  fullWidth
-                  required
-                />
-                <TextField
-                  label="Password"
-                  type={showPw ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  fullWidth
-                  required
-                  helperText="Minimum 8 characters."
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={() => setShowPw((s) => !s)} edge="end" aria-label="toggle password">
-                          {showPw ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-
-                <Alert
-                  icon={<MarkEmailReadIcon fontSize="inherit" />}
-                  severity="info"
-                  sx={{
-                    py: 0.5,
-                    px: 1.5,
-                    fontSize: '0.8rem',
-                    borderRadius: 2,
-                    backgroundColor: mode === 'dark' ? 'rgba(14,165,233,0.12)' : '#f0f9ff',
-                    borderColor: mode === 'dark' ? 'rgba(14,165,233,0.3)' : '#bae6fd',
-                    color: mode === 'dark' ? '#bae6fd' : '#0369a1',
-                  }}
-                >
-                  Verification instructions and account status updates will be sent to your email.
-                </Alert>
-
-                {error && (
-                  <Typography variant="body2" sx={{ color: 'error.main', fontWeight: 600 }}>
-                    {error}
-                  </Typography>
-                )}
-
+            {!isVerifying ? (
+              <>
                 <Button
-                  type="submit"
-                  variant="contained"
-                  size="large"
-                  disabled={loading}
+                  variant="outlined"
+                  fullWidth
+                  onClick={handleGoogleSignUp}
+                  startIcon={<GoogleIcon />}
                   sx={{
+                    py: 1.2,
                     mt: 1,
-                    py: 1.4,
-                    fontWeight: 800,
-                    borderRadius: 50,
-                    background: gradients.green,
-                    boxShadow: shadows.colored.green,
+                    mb: 2.5,
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    color: mode === 'dark' ? '#f3f4f6' : '#1f2937',
+                    borderColor: mode === 'dark' ? 'rgba(255,255,255,0.18)' : '#e5e7eb',
+                    background: mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#ffffff',
                     '&:hover': {
-                      background: gradients.greenAlt,
-                      boxShadow: shadows.colored.greenHover,
+                      borderColor: mode === 'dark' ? 'rgba(255,255,255,0.35)' : '#d1d5db',
+                      background: mode === 'dark' ? 'rgba(255,255,200,0.06)' : '#f9fafb',
                     },
                   }}
                 >
-                  {loading ? 'Creating account…' : 'Sign up'}
+                  Sign up with Google
                 </Button>
-              </Stack>
-            </Box>
+
+                <Divider sx={{ borderColor: colors.border.secondary, mb: 2.5 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', px: 1 }}>
+                    or register with email
+                  </Typography>
+                </Divider>
+
+                <Box component="form" onSubmit={handleSubmit} noValidate>
+                  <Stack spacing={2.25}>
+                    <TextField label="Full name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} fullWidth required />
+                    <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} fullWidth required />
+                    <TextField
+                      label="Password"
+                      type={showPw ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      fullWidth
+                      required
+                      helperText="Minimum 8 characters."
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton onClick={() => setShowPw((s) => !s)} edge="end" aria-label="toggle password">
+                              {showPw ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                    <TextField
+                      label="Confirm password"
+                      type={showConfirmPw ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      fullWidth
+                      required
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton onClick={() => setShowConfirmPw((s) => !s)} edge="end" aria-label="toggle confirm password">
+                              {showConfirmPw ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                    {error && <Typography variant="body2" sx={{ color: 'error.main', fontWeight: 600 }}>{error}</Typography>}
+                    <Button type="submit" variant="contained" size="large" disabled={loading} sx={{ mt: 1, py: 1.4, fontWeight: 800, borderRadius: 50, background: gradients.green, boxShadow: shadows.colored.green, '&:hover': { background: gradients.greenAlt, boxShadow: shadows.colored.greenHover } }}>
+                      {loading ? 'Creating account…' : 'Sign up'}
+                    </Button>
+                  </Stack>
+                </Box>
+              </>
+            ) : (
+              <Box component="form" onSubmit={handleVerifyOtp}>
+                <Stack spacing={2.25}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <MarkEmailReadIcon sx={{ fontSize: 46, color: brand.green.primary, mb: 1 }} />
+                    <Typography variant="h5" fontWeight={800}>Check your email</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      Enter the 6-digit code sent to <strong>{email}</strong> to finish creating your account.
+                    </Typography>
+                  </Box>
+                  {otpSuccessMsg && <Alert severity="success">{otpSuccessMsg}</Alert>}
+                  {otpError && <Alert severity="error">{otpError}</Alert>}
+                  <TextField
+                    label="Verification code"
+                    fullWidth
+                    autoFocus
+                    value={otpValue}
+                    onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    disabled={otpLoading}
+                    placeholder="123456"
+                    inputProps={{ inputMode: 'numeric', style: { letterSpacing: '0.25em', fontSize: '1.2rem', textAlign: 'center' } }}
+                  />
+                  <Button type="submit" variant="contained" size="large" disabled={otpLoading || otpValue.length < 6} sx={{ py: 1.35, fontWeight: 800, borderRadius: 50, background: gradients.green }}>
+                    {otpLoading ? <CircularProgress size={20} color="inherit" /> : 'Verify account'}
+                  </Button>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Button onClick={handleBackToDetails} disabled={otpLoading} startIcon={<ArrowBackRoundedIcon />} sx={{ textTransform: 'none' }}>
+                      Edit details
+                    </Button>
+                    <Button onClick={handleResendOtp} disabled={otpLoading} sx={{ textTransform: 'none' }}>
+                      Resend code
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Box>
+            )}
 
             <Typography variant="body2" sx={{ mt: 3, textAlign: 'center', color: 'text.secondary' }}>
               Already have access?{' '}
@@ -434,72 +444,6 @@ export default function SignUpPage() {
         </Stack>
       </Container>
 
-      {/* Email OTP Verification Modal */}
-      <Dialog
-        open={showOtpModal}
-        onClose={() => {}}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            p: 1,
-            backgroundColor: mode === 'dark' ? '#111827' : '#ffffff',
-            backgroundImage: 'none',
-            border: `1px solid ${mode === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}`,
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.65)',
-          },
-        }}
-      >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" fontWeight={800}>Verify Your Email</Typography>
-          <IconButton size="small" onClick={() => navigate('/dashboard')} disabled={otpLoading}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers sx={{ borderColor: colors.border.secondary }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            We dispatched a 6-digit verification code to <strong>{email}</strong>. Enter it below to activate all features.
-          </Typography>
-          {otpSuccessMsg && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {otpSuccessMsg}
-            </Alert>
-          )}
-          {otpError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {otpError}
-            </Alert>
-          )}
-          <TextField
-            label="6-Digit Verification Code"
-            fullWidth
-            autoFocus
-            value={otpValue}
-            onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            disabled={otpLoading}
-            placeholder="123456"
-            inputProps={{ style: { letterSpacing: '0.25em', fontSize: '1.2rem', textAlign: 'center' } }}
-          />
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
-          <Button onClick={handleResendOtp} disabled={otpLoading} size="small" sx={{ textTransform: 'none' }}>
-            Resend Code
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleVerifyOtp}
-            disabled={otpLoading || otpValue.length < 6}
-            sx={{
-              background: gradients.green,
-              borderRadius: 2,
-              fontWeight: 700,
-            }}
-          >
-            {otpLoading ? <CircularProgress size={20} color="inherit" /> : 'Verify Account'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }
