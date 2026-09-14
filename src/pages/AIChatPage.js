@@ -44,6 +44,7 @@ import {
 } from '../services/chatApi';
 import { fetchBusinesses } from '../services/businessApi';
 import BusinessRecommendationDialog from '../components/BusinessRecommendationDialog';
+import MLRecommendationCard from '../components/MLRecommendationCard';
 
 const SUGGESTION_CATEGORIES = [
   {
@@ -296,7 +297,20 @@ export default function AIChatPage() {
       const sid = res.sessionId || sessionId;
       if (res.sessionId && res.sessionId !== sessionId) setSessionId(res.sessionId);
       const fresh = await fetchChatMessages(token, sid);
-      setMessages(fresh);
+      if (res.recommendation && fresh && fresh.length > 0) {
+        const updated = [...fresh];
+        const lastIdx = updated.length - 1;
+        if (updated[lastIdx].sender === 'AI') {
+          updated[lastIdx] = {
+            ...updated[lastIdx],
+            recommendation: res.recommendation,
+            type: res.type,
+          };
+        }
+        setMessages(updated);
+      } else {
+        setMessages(fresh);
+      }
       await loadSessions();
     } catch (e) {
       if (e.name === 'AbortError') {
@@ -309,6 +323,10 @@ export default function AIChatPage() {
       setLoading(false);
       abortControllerRef.current = null;
     }
+  };
+
+  const handleQuickAction = (actionText) => {
+    onSend(actionText);
   };
 
   const handleCopyMessage = async (msgId, text) => {
@@ -354,7 +372,7 @@ export default function AIChatPage() {
     setRecDialogError('');
     try {
       const rec = await getBusinessRecommendation(token, sessionId, null, profileData);
-      if (rec.message && !rec.recommendedBusiness) {
+      if (rec.message && !rec.recommendedBusiness && (!rec.recommendations || !rec.recommendations.length)) {
         setRecDialogError(rec.message);
         setLoading(false);
         return;
@@ -366,7 +384,15 @@ export default function AIChatPage() {
         setSessionId(sid);
         const fresh = await fetchChatMessages(token, sid);
         if (fresh && fresh.length > 0) {
-          setMessages(fresh);
+          const updated = [...fresh];
+          const lastIdx = updated.length - 1;
+          if (updated[lastIdx].sender === 'AI') {
+            updated[lastIdx] = {
+              ...updated[lastIdx],
+              recommendation: rec,
+            };
+          }
+          setMessages(updated);
         } else {
           setMessages((prev) => [
             ...prev,
@@ -379,7 +405,8 @@ export default function AIChatPage() {
             {
               id: `rec-ai-${Date.now() + 1}`,
               sender: 'AI',
-              message: `**Recommended Product:** ${rec.recommendedBusiness}\n\n**Guidance:**\n${rec.guidance || rec.message || 'Focus on value-added processing for higher margins.'}`,
+              message: `Here is your AI product match based on your business profile:`,
+              recommendation: rec,
               createdAt: new Date().toISOString(),
             },
           ]);
@@ -528,17 +555,40 @@ export default function AIChatPage() {
               <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
                 {sessionTitle}
               </Typography>
-              <Chip
-                label="Coconut · Kithul · Palmyrah"
-                size="small"
-                sx={{
-                  ml: 'auto',
-                  fontWeight: 600,
-                  fontSize: '0.7rem',
-                  color: '#22C55E',
-                  background: 'rgba(34,197,94,0.1)',
-                }}
-              />
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: 'auto' }}>
+                <Chip
+                  label="Coconut · Kithul · Palmyrah"
+                  size="small"
+                  sx={{
+                    display: { xs: 'none', md: 'inline-flex' },
+                    fontWeight: 600,
+                    fontSize: '0.7rem',
+                    color: '#22C55E',
+                    background: 'rgba(34,197,94,0.1)',
+                  }}
+                />
+                <Tooltip title="Find the best product to start based on your budget, raw material, and team">
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={onGetRecommendation}
+                    disabled={loading}
+                    startIcon={<AutoAwesomeIcon sx={{ fontSize: 15 }} />}
+                    sx={{
+                      borderRadius: 999,
+                      fontSize: '0.78rem',
+                      textTransform: 'none',
+                      background: 'linear-gradient(135deg,#22C55E,#16A34A)',
+                      boxShadow: '0 3px 10px rgba(34,197,94,0.3)',
+                      fontWeight: 700,
+                      px: 1.75,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    ✨ Match My Business
+                  </Button>
+                </Tooltip>
+              </Stack>
             </Stack>
 
             {/* Suggestions banner when no messages */}
@@ -589,7 +639,7 @@ export default function AIChatPage() {
                     fontWeight: 700,
                   }}
                 >
-                  ✨ Match Products for My Business
+                  ✨ Find My Best Product Match
                 </Button>
               </Box>
             )}
@@ -657,7 +707,15 @@ export default function AIChatPage() {
                         {isUser ? 'You' : 'Assistant'} · {fmtTime(m.createdAt)}
                       </Typography>
                       {m.sender === 'AI' ? (
-                        <AssistantFormattedText text={m.message || ''} />
+                        <>
+                          <AssistantFormattedText text={m.message || ''} />
+                          {m.recommendation && (
+                            <MLRecommendationCard
+                              recommendation={m.recommendation}
+                              onActionClick={handleQuickAction}
+                            />
+                          )}
+                        </>
                       ) : (
                         <Typography
                           variant="body2"
@@ -788,6 +846,33 @@ export default function AIChatPage() {
                 flexShrink: 0,
               }}
             >
+              <Tooltip title="Find the best product match based on your budget, raw material, and team size">
+                <Button
+                  size="small"
+                  onClick={onGetRecommendation}
+                  disabled={loading}
+                  startIcon={<AutoAwesomeIcon sx={{ fontSize: 16 }} />}
+                  sx={{
+                    borderRadius: 999,
+                    fontSize: '0.76rem',
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    whiteSpace: 'nowrap',
+                    px: 1.5,
+                    py: 0.6,
+                    color: '#22C55E',
+                    bgcolor: mode === 'dark' ? 'rgba(34,197,94,0.1)' : 'rgba(34,197,94,0.08)',
+                    border: '1px solid',
+                    borderColor: 'rgba(34,197,94,0.3)',
+                    '&:hover': {
+                      bgcolor: 'rgba(34,197,94,0.18)',
+                    },
+                    display: { xs: 'none', sm: 'inline-flex' },
+                  }}
+                >
+                  ✨ Match My Business
+                </Button>
+              </Tooltip>
               <TextField
                 inputRef={inputRef}
                 fullWidth

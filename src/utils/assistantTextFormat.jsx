@@ -98,6 +98,8 @@ function normalizeAssistantText(raw) {
   let t = raw.replace(/\r\n/g, '\n').trim();
   // Collapse odd Unicode bullets like "1.⁠ ⁠*Title*" (word joiner / narrow spaces after numbers)
   t = t.replace(/^(\d+)\.\s*[\u2060\u200B\uFEFF\s]*/gm, '$1. ');
+  // Convert non-standard ++text++ markup (some LLM outputs) to **text** bold
+  t = t.replace(/\+\+([^+]+)\+\+/g, '**$1**');
   return t;
 }
 
