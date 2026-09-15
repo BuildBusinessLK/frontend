@@ -29,7 +29,7 @@ import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import StopRoundedIcon from '@mui/icons-material/StopRounded';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { AssistantFormattedText } from '../utils/assistantTextFormat.jsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -166,12 +166,19 @@ export default function AIChatPage() {
   const { mode } = useThemeMode();
   const { token } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const topPad = useChatPageTopPadding();
 
   const [sessions, setSessions] = useState([]);
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+
+  useEffect(() => {
+    if (location.state?.initialPrompt) {
+      setInput(location.state.initialPrompt);
+    }
+  }, [location.state]);
   const [loading, setLoading] = useState(false);
   const [bootLoading, setBootLoading] = useState(true);
   const [sendError, setSendError] = useState('');

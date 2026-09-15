@@ -3,6 +3,7 @@ export const MARKETING_BASE = '/dashboard/marketing';
 export const ROUTES = {
   dashboard: '/dashboard',
   dashboardAi: '/dashboard/ai-assistant',
+  continuousGuidance: '/dashboard/continuous-guidance',
   businessProfile: '/dashboard/business-profile',
   marketing: {
     root: MARKETING_BASE,

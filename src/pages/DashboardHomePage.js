@@ -14,6 +14,7 @@ import {
 import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
 import CampaignRoundedIcon from '@mui/icons-material/CampaignRounded';
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
+import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,6 +24,7 @@ import { alpha, getThemeColors, gradients, shadows, brand } from '../theme';
 const cards = [
   {
     title: 'AI assistant',
+    subtitle: 'Pillar 1',
     body: 'Chat with our industry-grounded AI. Get advice on coconut, kithul, and palmyrah businesses tailored to your profile.',
     to: ROUTES.dashboardAi,
     icon: <SmartToyRoundedIcon />,
@@ -30,16 +32,27 @@ const cards = [
     shadow: shadows.colored.green,
   },
   {
-    title: 'Marketing',
-    body: 'Generate your business website with AI, social media content, and email campaigns.',
+    title: 'Automated marketing',
+    subtitle: 'Pillar 2',
+    body: 'Generate your business website with AI, craft social media ads, and send customer emails with zero coding.',
     to: ROUTES.marketing.root,
     icon: <CampaignRoundedIcon />,
     accent: gradients.primary,
     shadow: shadows.colored.amber,
   },
   {
+    title: 'Continuous guidance',
+    subtitle: 'Pillar 3',
+    body: 'Upload harvest sheets, expense receipts, and compliance files. AI reads your records for accurate, personalized answers.',
+    to: ROUTES.continuousGuidance,
+    icon: <MenuBookRoundedIcon />,
+    accent: gradients.warm,
+    shadow: shadows.colored.amber,
+  },
+  {
     title: 'Business profile',
-    body: 'Manage your business details, product catalogue, and social links. AI uses this data to personalise responses.',
+    subtitle: 'Settings',
+    body: 'Manage your sector (Coconut, Kithul, Thal), budget, monthly yield, product catalogue, and social links.',
     to: ROUTES.businessProfile,
     icon: <PersonRoundedIcon />,
     accent: gradients.blue,
@@ -78,7 +91,7 @@ export default function DashboardHomePage() {
 
         <Grid container spacing={2.25}>
           {cards.map((c) => (
-            <Grid key={c.title} size={{ xs: 12, sm: 4 }}>
+            <Grid key={c.title} size={{ xs: 12, sm: 6, md: 3 }}>
               <Paper
                 component={RouterLink}
                 to={c.to}
@@ -102,28 +115,43 @@ export default function DashboardHomePage() {
                   },
                 }}
               >
-                <Stack spacing={2}>
-                  <Box
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 2,
-                      background: c.accent,
-                      color: '#fff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: c.shadow,
-                    }}
-                  >
-                    {c.icon}
+                <Stack spacing={2} sx={{ height: '100%', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+                      <Box
+                        sx={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 2,
+                          background: c.accent,
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: c.shadow,
+                        }}
+                      >
+                        {c.icon}
+                      </Box>
+                      {c.subtitle && (
+                        <Chip
+                          label={c.subtitle}
+                          size="small"
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: '0.72rem',
+                            bgcolor: mode === 'dark' ? alpha.white['06'] : alpha.black['04'],
+                          }}
+                        />
+                      )}
+                    </Stack>
+                    <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.02em', mb: 1 }}>
+                      {c.title}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary, lineHeight: 1.65 }}>
+                      {c.body}
+                    </Typography>
                   </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.02em' }}>
-                    {c.title}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: theme.palette.text.secondary, flex: 1, lineHeight: 1.7 }}>
-                    {c.body}
-                  </Typography>
                   <Button
                     component="span"
                     endIcon={<ArrowForwardRoundedIcon />}

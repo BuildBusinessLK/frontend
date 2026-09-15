@@ -21,6 +21,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import SmartToyRoundedIcon from '@mui/icons-material/SmartToyRounded';
+import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
 import CampaignRoundedIcon from '@mui/icons-material/CampaignRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import EmailRoundedIcon from '@mui/icons-material/EmailRounded';
@@ -161,6 +162,15 @@ export default function DashboardLayout() {
           selected={path === ROUTES.dashboardAi}
           dense
           to={ROUTES.dashboardAi}
+          onClick={handleNav}
+        />
+        <NavTile
+          icon={<MenuBookRoundedIcon />}
+          primary="Continuous guidance"
+          secondary="Business files & memory"
+          selected={path === ROUTES.continuousGuidance}
+          dense
+          to={ROUTES.continuousGuidance}
           onClick={handleNav}
         />
         <NavTile

@@ -21,6 +21,7 @@ import HostedSmeBusinessPage from './pages/HostedSmeBusinessPage';
 // Dashboard pages
 import DashboardHomePage from './pages/DashboardHomePage';
 import AIChatPage from './pages/AIChatPage';
+import ContinuousGuidancePage from './pages/ContinuousGuidancePage';
 import BusinessProfilePage from './pages/BusinessProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -78,6 +79,7 @@ export default function App() {
                 <Route index element={<DashboardHomePage />} />
                 <Route path="ai-assistant" element={<AIChatPage />} />
                 <Route path="ai-agent" element={<LegacyAiRedirect />} />
+                <Route path="continuous-guidance" element={<ContinuousGuidancePage />} />
                 <Route path="business-profile" element={<BusinessProfilePage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route
