@@ -6,14 +6,16 @@
 
 ## 0. TL;DR (short version for quick prompts)
 
-BuildBusinessLK is an AI-powered enterprise enablement platform for rural Sri Lankan MSMEs (agro-processing, handicrafts, local manufacturing). It is a decoupled monorepo: a **React** frontend, a **Spring Boot** REST API gateway, and a **FastAPI** AI microservice (LangChain, FAISS, Sentence-Transformers, Scikit-Learn). Core capabilities: an AI business mentor grounded in Sri Lankan agro-industrial knowledge, 1-click website generation and public hosting, email campaign management, social media ad copy generation, and (planned) ongoing personalized guidance via private document ingestion.
+BuildBusinessLK is an AI-powered enterprise enablement platform for rural Sri Lankan MSMEs. The platform currently supports **three agro sectors only — coconut, kithul, and palmyrah (thal)** — which the RAG knowledge base and ML recommender are built around. It is a decoupled monorepo: a **React** frontend, a **Spring Boot** REST API gateway, and a **FastAPI** AI microservice (LangChain, FAISS, Sentence-Transformers, Scikit-Learn). Core capabilities: an AI business mentor grounded in Sri Lankan agro-industrial knowledge, 1-click website generation and public hosting, email campaign management, social media ad copy generation, and (planned) ongoing personalized guidance via private document ingestion.
 
 ---
 
 ## 1. Introduction & Background
 
 ### 1.1 Project Overview
-BuildBusinessLK is an AI-powered enterprise enablement platform tailored specifically for **Sri Lankan Micro, Small, and Medium Enterprises (MSMEs / SMEs)**, with a strong focus on rural, semi-urban, and agro-based entrepreneurs (coconut, kithul, palmyra, spices, handicrafts, and small manufacturing).
+BuildBusinessLK is an AI-powered enterprise enablement platform tailored specifically for **Sri Lankan Micro, Small, and Medium Enterprises (MSMEs / SMEs)**, serving rural, semi-urban, and agro-based entrepreneurs.
+
+**Supported sectors (current scope):** the platform supports **coconut, kithul, and palmyrah (thal)** only. All domain knowledge, feasibility scoring, and product-line recommendations are grounded in these three value chains. Other sectors (spices, handicrafts, small manufacturing) are out of scope for now and are candidates for future expansion.
 
 ### 1.2 Problem Statement
 Rural entrepreneurs across Sri Lanka face systemic barriers that cause viable ventures to stay local or shut down:
@@ -49,8 +51,8 @@ BuildBusinessLK acts as a **24/7 autonomous digital co-founder**, delivering:
 ```
 
 ### Module 1 — AI Assistant & Business Advisor
-- **Domain-specific RAG engine:** LangChain + FAISS vector search, pre-indexed with Sri Lankan agro-industrial datasets (Coconut Development Authority, Kithul Development Board, Palmyra Development Board, Export Development Board, local market standards).
-- **ML business & feasibility recommender:** `ml/predict.py` + `feasibility.py` evaluate capital budget (LKR), monthly raw yield (kg), staff size, and experience to recommend viable product lines with feasibility scores (Capital Fit, Yield Fit, Staffing Fit).
+- **Domain-specific RAG engine:** LangChain + FAISS vector search, pre-indexed with Sri Lankan agro-industrial datasets for the three supported sectors — Coconut Development Authority, Kithul Development Board, and Palmyrah Development Board — plus Export Development Board guidance and local market standards.
+- **ML business & feasibility recommender:** `ml/predict.py` + `feasibility.py` evaluate capital budget (LKR), monthly raw yield (kg), staff size, and experience to recommend viable product lines within coconut, kithul, or palmyrah with feasibility scores (Capital Fit, Yield Fit, Staffing Fit).
 - **Adaptive SME conversational agent:** reads the user's business profile and chat history, avoids generic academic answers, and returns concrete pros/cons, step-by-step local guidance, and Sinhala/English conversational support.
 
 ### Module 2 — Automated Website Builder & Public Hosting
@@ -236,7 +238,7 @@ sequenceDiagram
 | Feature Area | Status | Notes |
 | :--- | :---: | :--- |
 | User & Business Profile Management | ✅ Completed | Captures capital, location, sector, yield, employee count, social channels |
-| RAG Knowledge Base (LK agro focus) | ✅ Completed | Coconut, Kithul, Palmyra, and export regulatory bodies embedded |
+| RAG Knowledge Base (LK agro focus) | ✅ Completed | Scoped to the three supported sectors — coconut, kithul, palmyrah — plus export regulatory bodies |
 | ML Business Recommender | ✅ Completed | Feasibility scoring based on budget and resource constraints |
 | AI Advisor Chat Engine | ✅ Completed | Q&A integrated with chat history and business profile context |
 | Automated Website Builder & Host | ✅ Completed | Copy generation, preview, custom slug routing, public view |
@@ -244,9 +246,10 @@ sequenceDiagram
 | Social Media Ads Studio | 🟡 In Progress | Prompt and copy generation done; finalizing platform-specific export formats |
 | Continuous Document Guidance | 🔄 Planned | Ingestion pipeline (PDF/Excel), user-isolated vector namespaces, invoice memory |
 | Bilingual Sinhala/Tamil Speech-to-Text | 🔮 Roadmap | Voice-first interaction for entrepreneurs with minimal typing literacy |
+| Additional Sector Coverage | 🔮 Roadmap | Beyond coconut / kithul / palmyrah — requires new knowledge-base corpora and retrained feasibility data |
 
 ---
 
 ## 6. Ready-to-Paste Prompt Header
 
-> *"BuildBusinessLK is an enterprise enablement platform for rural Sri Lankan SMEs (agro-processing, handicrafts, local manufacturing). It features a Spring Boot API gateway, a FastAPI AI microservice (LangChain, FAISS, ML feasibility models), and a React frontend. The primary capabilities are an AI business mentor, 1-click website generation and hosting, email marketing, social media ad generation, and ongoing personalized guidance via private document ingestion. Answer my questions with this architecture in mind."*
+> *"BuildBusinessLK is an enterprise enablement platform for rural Sri Lankan SMEs. It currently supports three agro sectors only: coconut, kithul, and palmyrah (thal). It features a Spring Boot API gateway, a FastAPI AI microservice (LangChain, FAISS, ML feasibility models), and a React frontend. The primary capabilities are an AI business mentor, 1-click website generation and hosting, email marketing, social media ad generation, and ongoing personalized guidance via private document ingestion. Answer my questions with this architecture and sector scope in mind — do not assume support for sectors outside coconut, kithul, and palmyrah."*
