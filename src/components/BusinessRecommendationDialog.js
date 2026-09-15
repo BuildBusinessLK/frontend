@@ -147,7 +147,7 @@ export default function BusinessRecommendationDialog({
             >
               <MenuItem value="coconut">🌴 Coconut (VCO, Flour, Milk, Chips, Desiccated)</MenuItem>
               <MenuItem value="kithul">🍯 Kithul (Treacle, Jaggery, Flour)</MenuItem>
-              <MenuItem value="palmyrah">☀️ Palmyrah (Jaggery, Sugar, Treacle)</MenuItem>
+              <MenuItem value="palmyrah">☀️ Palmyrah / Thal (Jaggery, Sugar, Treacle)</MenuItem>
             </Select>
           </FormControl>
 

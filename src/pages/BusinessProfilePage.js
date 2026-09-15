@@ -169,11 +169,9 @@ export default function BusinessProfilePage() {
             )}
             <TextField label="Business name" value={businessName} onChange={(e) => setBusinessName(e.target.value)} required />
             <TextField label="Sector" select value={sector} onChange={(e) => setSector(e.target.value)}>
-              {SECTORS.map((s) => (
-                <MenuItem key={s} value={s}>
-                  {s}
-                </MenuItem>
-              ))}
+              <MenuItem value="COCONUT">🌴 Coconut (Pol)</MenuItem>
+              <MenuItem value="KITHUL">🍯 Kithul</MenuItem>
+              <MenuItem value="PALMYRAH">☀️ Palmyrah (Thal)</MenuItem>
             </TextField>
             <TextField
               label="Website slug (optional — auto from name if empty)"

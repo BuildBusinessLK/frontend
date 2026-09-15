@@ -67,12 +67,9 @@ const CAMPAIGN_GOALS = [
 ];
 
 const SECTOR_OPTIONS = [
-  { value: 'COCONUT', label: 'Coconut & Kernels' },
-  { value: 'KITHUL', label: 'Kithul & Jaggery' },
-  { value: 'PALMYRAH', label: 'Palmyrah & Distillates' },
-  { value: 'FOOD_BEVERAGE', label: 'Food & Beverage' },
-  { value: 'AGRICULTURE', label: 'Agriculture & Spices' },
-  { value: 'HANDICRAFTS', label: 'Handicrafts & Decor' },
+  { value: 'COCONUT', label: '🌴 Coconut (Pol)' },
+  { value: 'KITHUL', label: '🍯 Kithul' },
+  { value: 'PALMYRAH', label: '☀️ Palmyrah / Thal' },
 ];
 
 const TONE_OPTIONS = [
