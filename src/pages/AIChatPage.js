@@ -45,6 +45,7 @@ import {
 import { fetchBusinesses } from '../services/businessApi';
 import BusinessRecommendationDialog from '../components/BusinessRecommendationDialog';
 import MLRecommendationCard from '../components/MLRecommendationCard';
+import EmailCampaignCard from '../components/EmailCampaignCard';
 
 const SUGGESTION_CATEGORIES = [
   {
@@ -713,6 +714,12 @@ export default function AIChatPage() {
                             <MLRecommendationCard
                               recommendation={m.recommendation}
                               onActionClick={handleQuickAction}
+                            />
+                          )}
+                          {m.emailCampaign && (
+                            <EmailCampaignCard
+                              emailCampaign={m.emailCampaign}
+                              actions={m.actions}
                             />
                           )}
                         </>
