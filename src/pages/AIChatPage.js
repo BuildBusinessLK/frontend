@@ -865,14 +865,14 @@ export default function AIChatPage() {
                   size="small"
                   onClick={onGetRecommendation}
                   disabled={loading}
-                  startIcon={<AutoAwesomeIcon sx={{ fontSize: 16 }} />}
+                  // startIcon={<AutoAwesomeIcon sx={{ fontSize: 16 }} />}
                   sx={{
                     borderRadius: 999,
                     fontSize: '0.76rem',
                     fontWeight: 700,
                     textTransform: 'none',
                     whiteSpace: 'nowrap',
-                    px: 1.5,
+                    px: 2.5,
                     py: 0.6,
                     color: '#22C55E',
                     bgcolor: mode === 'dark' ? 'rgba(34,197,94,0.1)' : 'rgba(34,197,94,0.08)',
@@ -884,7 +884,7 @@ export default function AIChatPage() {
                     display: { xs: 'none', sm: 'inline-flex' },
                   }}
                 >
-                  ✨ Match My Business
+                  Match My Business
                 </Button>
               </Tooltip>
               <TextField
