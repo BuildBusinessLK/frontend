@@ -6,11 +6,11 @@ build/
 dist/
 coverage/
 
-# environment files (allow tracked env files)
-!.env
-!.env.local
-!.env.development
-!.env.production
+# environment files
+.env
+.env.local
+.env.development
+.env.production
 
 # logs
 npm-debug.log*
